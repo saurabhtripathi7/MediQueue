@@ -44,7 +44,9 @@ const Doctors = () => {
           <button
             onClick={() => setShowFilter((p) => !p)}
             className={`sm:hidden mb-3 py-1 px-3 border rounded text-sm transition-colors ${
-              showFilter ? "bg-primary text-white" : "dark:text-white dark:border-gray-600"
+              showFilter
+                ? "bg-primary text-white"
+                : "dark:text-white dark:border-gray-600"
             }`}
           >
             Filters
@@ -95,12 +97,13 @@ const Doctors = () => {
               // 2. CARD CONTAINER: Added dark:bg-gray-800 and dark:border-gray-700
               className="border border-blue-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-all duration-300"
             >
-              <img
-                src={item.image}
-                alt={item.name}
-                // 3. IMAGE BG: Changed blue-50 to dark:bg-gray-700 so it's not too bright
-                className="bg-blue-50 dark:bg-gray-700 w-full h-32 object-contain"
-              />
+              <div className="h-36 w-full bg-blue-50 dark:bg-gray-700 flex items-center justify-center">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-full max-w-full object-contain"
+                />
+              </div>
 
               <div className="p-4">
                 <div
@@ -117,8 +120,12 @@ const Doctors = () => {
                 </div>
 
                 {/* 4. TEXT COLORS: Added dark:text-white and dark:text-gray-400 */}
-                <p className="text-gray-900 dark:text-white text-lg font-medium">{item.name}</p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">{item.speciality}</p>
+                <p className="text-gray-900 dark:text-white text-lg font-medium">
+                  {item.name}
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  {item.speciality}
+                </p>
               </div>
             </div>
           ))}

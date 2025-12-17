@@ -15,7 +15,14 @@ const TopDoctors = () => {
       </p>
 
       {/* GRID */}
-      <div className="w-full grid grid-cols-auto-fit gap-4 pt-5 px-3 sm:px-0">
+      <div
+        className="w-full grid
+    grid-cols-1
+    sm:grid-cols-2
+    md:grid-cols-5
+    gap-4
+    pt-5 px-3 sm:px-0"
+      >
         {doctors.slice(0, 10).map((item) => {
           // ✅ Default availability if backend field is missing
           const isAvailable = item.available ?? true;
@@ -30,7 +37,7 @@ const TopDoctors = () => {
               className="border border-blue-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-3.5 transition-all duration-300"
             >
               <img
-                className="bg-blue-50 dark:bg-gray-700 h-40 w-full object-cover"
+                className="h-50 bg-blue-50 dark:bg-gray-700 w-full object-cover"
                 src={item.image}
                 alt={item.name}
               />
