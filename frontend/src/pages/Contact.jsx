@@ -3,7 +3,7 @@ import { assets } from "../assets/assets";
 
 const Contact = () => {
   return (
-    <div className="px-4 sm:px-6 md:px-10">
+    <div className="px-3 sm:px-6 md:px-10">
       {/* ---------- HEADER ---------- */}
       <div className="text-center pt-12">
         <p className="text-3xl font-semibold text-gray-800 dark:text-white">

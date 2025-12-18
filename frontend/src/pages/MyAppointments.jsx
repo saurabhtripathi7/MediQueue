@@ -64,13 +64,13 @@ const MyAppointments = () => {
   };
 
   return (
-    <div className="px-4 sm:px-8 md:px-16 mt-12">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-3">
+    <div className="px-3 sm:px-8 md:px-16 mt-12">
+      <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 border-b pb-3">
         My Appointments
       </h2>
 
       {appointments.length === 0 && (
-        <p className="text-gray-500 text-center">No appointments found.</p>
+        <p className="dark:text-white text-gray-500 text-center">No appointments found.</p>
       )}
 
       <div className="flex flex-col gap-6">
@@ -92,7 +92,7 @@ const MyAppointments = () => {
 
               {/* Doctor Info */}
               <div className="flex-1 text-sm text-gray-600">
-                <p className="text-lg font-semibold text-gray-800">
+                <p className="text-lg font-semibold text-gray-800 dark:text-white">
                   {doc.name}
                 </p>
                 <p>{doc.speciality}</p>

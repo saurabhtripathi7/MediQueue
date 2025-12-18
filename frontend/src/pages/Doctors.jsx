@@ -47,7 +47,7 @@ const Doctors = () => {
               key={item.speciality}
               onClick={() => handleFilterClick(item.speciality)}
               className={`
-                shrink-0 px-4 py-2 rounded-full border text-sm whitespace-nowrap cursor-pointer transition-all duration-200
+                shrink-0 px-3 py-2 rounded-full border text-sm whitespace-nowrap cursor-pointer transition-all duration-200
                 ${
                   speciality === item.speciality
                     ? "bg-primary text-white border-primary shadow-md shadow-primary/30"

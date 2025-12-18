@@ -1,74 +1,102 @@
 import React from "react";
 import { assets } from "../assets/assets";
+import { Link } from "react-router-dom"; 
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <div className="px-4 md:mx-10 mt-40"> {/* Moved mt-40 here for cleaner spacing */}
-      <div className="flex flex-col sm:grid sm:grid-cols-[3fr_1fr_1fr] gap-14 my-10 text-sm">
-        {/* Left */}
-        <div>
-          <img 
-            className="mb-5 w-40 bg-white rounded-md p-1" // Added bg-white so logo is visible on dark bg
-            src={assets.logo} 
-            alt="MediQueue Logo" 
-          />
-          <p className="w-full md:w-2/3 text-gray-600 dark:text-gray-400 leading-6">
-            MediQueue helps you find trusted doctors and book appointments
-            effortlessly. Browse by speciality, check availability in real time,
-            and manage your appointments—all in one simple, secure platform.{" "}
+    <div className="mt-20 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-16">
+        
+        {/* TOP GRID AREA */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          
+          {/* 1. Brand Section */}
+          <div className="lg:col-span-1">
+            <img className="w-36 mb-6" src={assets.logo} alt="MediQueue" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
+              MediQueue simplifies healthcare access. Book appointments, manage health records, and connect with top doctors instantly.
+            </p>
+            <div className="flex gap-3">
+              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                <a key={i} href="#" className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-primary hover:bg-primary hover:text-white dark:hover:bg-primary transition-all">
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. Quick Links */}
+          <div>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Quick Links</h3>
+            <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
+              {[
+                { label: 'Home', path: '/' },
+                { label: 'All Doctors', path: '/doctors' },
+                { label: 'About Us', path: '/about' },
+                { label: 'Contact', path: '/contact' },
+                { label: 'My Profile', path: '/my-profile' }, 
+              ].map((link) => (
+                <li key={link.path}>
+                  <Link to={link.path} className="hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-1 group">
+                    <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300">→</span>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 3. Contact Info */}
+          <div>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Contact Us</h3>
+            <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
+              <li className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary shrink-0" />
+                <span>KIET Group of Institutions,<br />Delhi NCR, India</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-primary shrink-0" />
+                <span>+91 9569932897</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-primary shrink-0" />
+                <span>saurabh7sde@gmail.com</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* 4. Newsletter */}
+          <div>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Stay Updated</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+              Subscribe to get the latest health tips and updates.
+            </p>
+            <div className="flex">
+              <input 
+                type="email" 
+                placeholder="Enter email" 
+                className="w-full px-3 py-2.5 rounded-l-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-primary text-sm"
+              />
+              <button className="bg-primary text-white px-3 rounded-r-lg hover:bg-secondary transition-colors">
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM COPYRIGHT */}
+        <div className="pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500">
+            © 2025 MediQueue. All rights reserved.
           </p>
+          <div className="flex gap-6 text-sm text-gray-500">
+            <span className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
+            <span className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms of Service</span>
+          </div>
         </div>
 
-        {/* Center */}
-        <div>
-          <p className="text-xl font-medium mb-5 text-gray-900 dark:text-white">COMPANY</p>
-          <ul className="flex flex-col gap-2 text-gray-600 dark:text-gray-400">
-            <li className="hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">
-              Home
-            </li>
-            <li className="hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">
-              About us
-            </li>
-            <li className="hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">
-              Contact us
-            </li>
-            <li className="hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">
-              Privacy policy
-            </li>
-          </ul>
-        </div>
-
-        {/* Right */}
-        <div>
-          <p className="text-xl font-medium mb-5 text-gray-900 dark:text-white">GET IN TOUCH</p>
-          <ul className="flex flex-col gap-2 text-gray-600 dark:text-gray-400">
-            <li>
-              <a 
-                href="tel:+919569932897" 
-                className="hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                +91 9569932897
-              </a>
-            </li>
-            <li>
-              <a
-                href="mailto:saurabh7sde@gmail.com"
-                className="hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                saurabh7sde@gmail.com
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
-
-      {/* Divider */}
-      <hr className="border-gray-300 dark:border-gray-700" />
-
-      {/* Copyright */}
-      <p className="py-5 text-sm text-center text-gray-600 dark:text-gray-400">
-        Copyright © 2025 Saurabh Tripathi – All Rights Reserved
-      </p>
     </div>
   );
 };
