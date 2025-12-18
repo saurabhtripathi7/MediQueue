@@ -273,7 +273,7 @@ export const doctors = [
   },
   {
     _id: "doc12",
-    name: "Dr. Sameer Khan",
+    name: "Dr. Sameera Khan",
     image: doc12,
     speciality: "Neurologist",
     degree: "MBBS",
