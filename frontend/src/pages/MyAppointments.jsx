@@ -4,7 +4,6 @@ import { AppContext } from "../context/AppContext";
 const MyAppointments = () => {
   const { doctors, currencySymbol } = useContext(AppContext);
 
-  // ---------- MOCK APPOINTMENTS ----------
   const [appointments, setAppointments] = useState([
     {
       _id: "apt1",
@@ -32,45 +31,27 @@ const MyAppointments = () => {
     },
   ]);
 
-  const months = [
-    "",
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // ---------- FORMAT DATE ----------
   const formatDate = (slotDate) => {
     const [day, month, year] = slotDate.split("_");
     return `${day} ${months[Number(month)]} ${year}`;
   };
 
-  // ---------- CANCEL APPOINTMENT ----------
   const cancelAppointment = (id) => {
     setAppointments((prev) =>
-      prev.map((apt) =>
-        apt._id === id ? { ...apt, cancelled: true } : apt
-      )
+      prev.map((apt) => (apt._id === id ? { ...apt, cancelled: true } : apt))
     );
   };
 
   return (
     <div className="px-3 sm:px-8 md:px-16 mt-12">
-      <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 border-b pb-3">
+      <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 border-b dark:border-gray-700 pb-3">
         My Appointments
       </h2>
 
       {appointments.length === 0 && (
-        <p className="dark:text-white text-gray-500 text-center">No appointments found.</p>
+        <p className="dark:text-gray-400 text-gray-500 text-center mt-10">No appointments found.</p>
       )}
 
       <div className="flex flex-col gap-6">
@@ -81,52 +62,59 @@ const MyAppointments = () => {
           return (
             <div
               key={apt._id}
-              className="flex flex-col sm:flex-row gap-4 border rounded-xl p-4 shadow-sm hover:shadow-md transition"
+              // FIX: Added dark borders and background
+              className="flex flex-col sm:flex-row gap-4 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 bg-white dark:bg-gray-800/50"
             >
               {/* Doctor Image */}
-              <img
-                src={doc.image}
-                alt={doc.name}
-                className="w-32 h-32 object-contain bg-blue-50 rounded-lg"
-              />
+              <div className="w-32 h-32 shrink-0">
+                <img
+                  src={doc.image}
+                  alt={doc.name}
+                  // FIX: Changed bg-blue-50 to work in dark mode
+                  className="w-full h-full object-cover bg-blue-50 dark:bg-gray-700 rounded-lg"
+                />
+              </div>
 
               {/* Doctor Info */}
-              <div className="flex-1 text-sm text-gray-600">
+              <div className="flex-1 text-sm text-gray-600 dark:text-gray-300">
                 <p className="text-lg font-semibold text-gray-800 dark:text-white">
                   {doc.name}
                 </p>
-                <p>{doc.speciality}</p>
+                <p className="text-gray-500 dark:text-gray-400">{doc.speciality}</p>
 
-                <p className="mt-2 font-medium text-gray-700">Address:</p>
-                <p className="text-xs">{doc.address.line1}</p>
-                <p className="text-xs">{doc.address.line2}</p>
+                <p className="mt-2 font-medium text-gray-700 dark:text-gray-200">Address:</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{doc.address.line1}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{doc.address.line2}</p>
 
                 <p className="mt-2">
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
                     Date & Time:
                   </span>{" "}
-                  {formatDate(apt.slotDate)} | {apt.slotTime}
+                  <span className="text-gray-600 dark:text-gray-300">
+                     {formatDate(apt.slotDate)} | {apt.slotTime}
+                  </span>
                 </p>
 
                 <p className="mt-1">
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
                     Fees:
                   </span>{" "}
-                  {currencySymbol}
-                  {doc.fees}
+                  <span className="text-gray-600 dark:text-gray-300">
+                    {currencySymbol}{doc.fees}
+                  </span>
                 </p>
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2 justify-end min-w-45">
+              <div className="flex flex-col gap-2 justify-end sm:min-w-48">
                 {!apt.cancelled && !apt.isCompleted && (
                   <>
-                    <button className="py-2 border rounded text-sm hover:bg-primary hover:text-white transition">
+                    <button className="py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:border-primary transition-all duration-300">
                       Pay Online
                     </button>
                     <button
                       onClick={() => cancelAppointment(apt._id)}
-                      className="py-2 border rounded text-sm hover:bg-red-600 hover:text-white transition"
+                      className="py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-200 hover:bg-red-500 hover:text-white hover:border-red-500 dark:hover:border-red-500 transition-all duration-300"
                     >
                       Cancel Appointment
                     </button>
@@ -134,15 +122,15 @@ const MyAppointments = () => {
                 )}
 
                 {apt.cancelled && (
-                  <button className="py-2 border border-red-500 text-red-500 rounded text-sm">
+                  <div className="py-2 border border-red-500 text-red-500 rounded text-center text-sm font-medium opacity-80">
                     Appointment Cancelled
-                  </button>
+                  </div>
                 )}
 
                 {apt.isCompleted && (
-                  <button className="py-2 border border-green-500 text-green-500 rounded text-sm">
+                  <div className="py-2 border border-green-500 text-green-500 rounded text-center text-sm font-medium opacity-80">
                     Completed
-                  </button>
+                  </div>
                 )}
               </div>
             </div>

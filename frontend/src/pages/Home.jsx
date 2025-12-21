@@ -1,45 +1,36 @@
-import React from 'react'
-import Header from '../components/Header'
-import SpecialityMenu from '../components/SpecialityMenu'
-import TopDoctors from '../components/TopDoctors'
-import Banner from '../components/Banner'
-import { motion } from 'framer-motion' // Optional: for smooth entry
+import React from "react";
+import Header from "../components/Header";
+import SpecialityMenu from "../components/SpecialityMenu";
+import TopDoctors from "../components/TopDoctors";
+import Banner from "../components/Banner";
 
 const Home = () => {
   return (
-    // 1. Motion Wrapper for smooth page load
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white dark:bg-gray-900 min-h-screen" // Ensure dark mode background
-    >
-      
-      {/* Header usually looks best full-width or with its own constraint */}
-      <Header/>
+    <div className="min-h-screen">
+      {/* Hero / Header (no animation on full page) */}
+      <Header />
 
-      {/* 2. Main Content Container 
-          - max-w-7xl: Prevents content from getting too wide on huge screens.
-          - mx-auto: Centers the container.
-          - space-y-20: Adds consistent vertical breathing room between sections.
-      */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-20 pb-20">
+      {/* Main content wrapper */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-20 space-y-20">
         
-        <section>
-           <SpecialityMenu/>
+        {/* Section 1: Specialities */}
+        <section className="bg-white/90 dark:bg-gray-900 rounded-2xl shadow-sm p-6 sm:p-8">
+          <SpecialityMenu />
         </section>
-        
-        <section>
-           <TopDoctors/>
+
+        {/* Section 2: Top Doctors */}
+        <section className="bg-white/90 dark:bg-gray-900 rounded-2xl shadow-sm p-6 sm:p-8">
+          <TopDoctors />
         </section>
-        
-        <section>
-           <Banner/>
+
+        {/* Section 3: Banner */}
+        <section className="dark:bg-gray-900 rounded-2xl ">
+          <Banner />
         </section>
 
       </div>
-    </motion.div>
-  )
-}
+    </div>
+  );
+};
 
-export default Home
+export default Home;

@@ -22,15 +22,15 @@ const Contact = () => {
         />
 
         {/* Info Cards */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 ">
           {/* Office */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6">
-            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2">
+          <div className="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl hover:bg-primary hover:text-white transition-all duration-300">
+            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2 ">
               Our Office
             </p>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Arjun Enclave Phase 2 <br />
-              Kursi Road, Lucknow (226026) <br />
+            <p className="text-gray-600 dark:text-gray-400 text-sm group-hover:text-white">
+              F-391, Gomti Nagar <br />
+              Lucknow (226010) <br />
               <span className="flex items-center gap-1">
                 India (🇮🇳)
                 <img
@@ -43,33 +43,34 @@ const Contact = () => {
           </div>
 
           {/* Contact */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6">
-            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2">
+          <div className="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl hover:bg-primary hover:text-white transition-all duration-300">
+            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2 ">
               Contact Details
             </p>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              📞 +91 95699 32897 <br />
+            <p className="text-gray-600 dark:text-gray-400 text-sm group-hover:text-white">
+              📞 +91 95XXX-XXX97 <br />
               ✉️ saurabh7sde@gmail.com
             </p>
           </div>
 
           {/* Careers */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6">
-            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2">
+          <div className="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl hover:bg-primary hover:text-white transition-all duration-300">
+            <p className="font-semibold text-lg text-gray-800 dark:text-white mb-2 ">
               Careers at MediQueue
             </p>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 group-hover:text-white">
               Learn more about our teams and current job openings.
             </p>
             <button
               className="
               inline-flex items-center gap-2
               px-6 py-3 rounded-full
-              bg-primary text-white
+              bg-blue-700 text-white
               text-sm font-medium
               hover:opacity-90
-              hover:-translate-y-0.5
+              hover:translate-x-1.5 hover:-translate-y-0.5
               transition-all duration-300
+              group-hover:text-white
             "
             >
               Explore Jobs →

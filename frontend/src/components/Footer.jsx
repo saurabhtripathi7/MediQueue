@@ -38,7 +38,11 @@ const Footer = () => {
                 { label: 'My Profile', path: '/my-profile' }, 
               ].map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-1 group">
+                  <Link 
+                    to={link.path} 
+                    onClick={() => window.scrollTo(0, 0)} // Added Scroll To Top Here
+                    className="hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-1 group"
+                  >
                     <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300">→</span>
                     {link.label}
                   </Link>
@@ -91,8 +95,18 @@ const Footer = () => {
             © 2025 MediQueue. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
-            <span className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms of Service</span>
+            <span 
+              onClick={() => window.scrollTo(0, 0)} // Added Scroll Here
+              className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </span>
+            <span 
+              onClick={() => window.scrollTo(0, 0)} // Added Scroll Here
+              className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              Terms of Service
+            </span>
           </div>
         </div>
 

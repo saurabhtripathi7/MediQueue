@@ -1,73 +1,73 @@
-  @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
-  @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
 
-  @theme {
-    /* Colors */
-    --color-primary: #16a34a;
-    --color-primary-light: #22c55e;
-    --color-primary-dark: #15803d;
-    --color-secondary: #5f6FFF;
+@theme {
+  /* Colors */
+  --color-primary: #16a34a;
+  --color-primary-light: #22c55e;
+  --color-primary-dark: #15803d;
+  --color-secondary: #5f6FFF;
 
-    /* Grid templates */
-    --grid-template-columns-auto-fit: repeat(auto-fit, minmax(180px, 1fr));
+  /* Grid templates */
+  --grid-template-columns-auto-fit: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+* {
+  font-family: Outfit;
+}
+
+.active hr {
+  @apply block;
+}
+
+::-webkit-scrollbar {
+  @apply hidden;
+}
+
+@media (max-width: 740px) {
+  .active p {
+    @apply text-white bg-primary;
+  }
+}
+
+/* 1. Standard Dark Mode Logic */
+@variant dark (&:where(.dark, .dark *));
+
+/* 2. Body Styles */
+body {
+  @apply bg-white text-gray-800 transition-colors duration-300;
+}
+
+/* DARK MODE: Set entire page background to PURE BLACK */
+.dark body {
+  @apply bg-black text-gray-400;
+}
+ 
+@layer base {
+  /* 3. GLOBAL DARK MODE TEXT FIX */
+  .dark p, .dark span, .dark li, .dark div {
+    @apply text-gray-300; 
   }
 
-  * {
-    font-family: Outfit;
+  /* Headings */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-white;
   }
-
-  .active hr {
-    @apply block;
-  }
-
-  ::-webkit-scrollbar {
-    @apply hidden;
-  }
-
-  @media (max-width: 740px) {
-    .active p {
-      @apply text-white bg-primary;
-    }
-  }
-
-  /* 1. Standard Dark Mode Logic */
-  @variant dark (&:where(.dark, .dark *));
-
-  /* 2. Body Styles */
-  body {
-    @apply bg-white text-gray-800 transition-colors duration-300;
-  }
-
-  /* DARK MODE: Set entire page background to PURE BLACK */
-  .dark body {
-    @apply bg-black text-gray-400;
-  }
-
-  @layer base {
-    /* 3. GLOBAL DARK MODE TEXT FIX
-      Ensures text inside divs, spans, and lists turns white/gray 
-    */
-    .dark p, .dark span, .dark li, .dark div {
-      @apply text-gray-300; 
-    }
-
-    /* Headings */
-    .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-      @apply text-white;
-    }
-  }
-
-  /* 4. THE "ALL DIVS BLACK" OVERRIDE (Crucial Fix)
-    This forces any component you built with "bg-white" (like your doctor cards)
-    to turn black automatically in dark mode, without you editing the JSX files.
-  */
-  .dark .bg-white {
-    background-color: #000000 !important; /* Forces black background */
-    color: #ffffff;                       /* Forces white text */
-    border-color: #374151;                /* Adds a subtle gray border so cards don't disappear */
-  }
-
-  /* Optional: Make hover effects on white cards dark too */
-  .dark .hover\:bg-blue-50:hover {
-    background-color: #111827 !important; /* Dark gray on hover */
-  }
+}
+/* 3. THE SPOTLIGHT (Rich Dark) */
+.dark .bg-white {
+  /* Dark Slate Blue (Rich Black) - easier on eyes than pure black */
+  background-color: #0b0c15 !important;
+  
+  /* Text is very bright for readability */
+  color: #f8fafc;
+  
+  /* Clean, thin border */  
+  border: 1px solid #27272a;
+}
+ 
+.dark .bg-white:hover {
+  /* Subtle highlight */
+  border-color: #52525b;
+  background-color: #0f1c71 !important; 
+}
