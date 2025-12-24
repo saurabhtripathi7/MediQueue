@@ -2,9 +2,13 @@ import React from "react";
 import { assets } from "../assets/assets";
 import { Link } from "react-router-dom"; 
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
+    const navigate = useNavigate();
+
   return (
+    
     <div className="mt-20 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-16">
         
@@ -13,7 +17,10 @@ const Footer = () => {
           
           {/* 1. Brand Section */}
           <div className="lg:col-span-1">
-            <img className="w-36 mb-6" src={assets.logo} alt="MediQueue" />
+            <img onClick={() => {
+                navigate("/");
+                window.scrollTo(0, 0);
+              }} className="w-36 mb-6 cursor-pointer" src={assets.main_logo} alt="MediQueue" />
             <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
               MediQueue simplifies healthcare access. Book appointments, manage health records, and connect with top doctors instantly.
             </p>

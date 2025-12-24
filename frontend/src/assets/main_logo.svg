@@ -1,39 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
+   width="207"
+   height="49"
+   viewBox="0 0 207 49"
+   fill="none"
    version="1.1"
-   id="svg1"
-   width="1536"
-   height="1024"
-   viewBox="0 0 1536 1024"
-   sodipodi:docname="logo.svg"
+   id="svg4"
+   sodipodi:docname="admin_logo.svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview1"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.58764441"
-     inkscape:cx="707.9111"
-     inkscape:cy="365.01666"
-     inkscape:window-width="1920"
-     inkscape:window-height="1111"
-     inkscape:window-x="-9"
-     inkscape:window-y="-9"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg1" />
   <defs
-     id="defs1">
+     id="defs4">
+    <linearGradient
+       xlink:href="#swatch1"
+       id="linearGradient1-4"
+       x1="2.4065788"
+       y1="289.39133"
+       x2="957.21729"
+       y2="289.39133"
+       gradientUnits="userSpaceOnUse" />
     <linearGradient
        id="swatch1">
       <stop
@@ -41,18 +30,28 @@
          offset="0"
          id="stop1" />
     </linearGradient>
-    <linearGradient
-       xlink:href="#swatch1"
-       id="linearGradient1"
-       x1="2.4065788"
-       y1="289.39133"
-       x2="957.21731"
-       y2="289.39133"
-       gradientUnits="userSpaceOnUse" />
   </defs>
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.1068291"
+     inkscape:cx="136.15168"
+     inkscape:cy="63.247766"
+     inkscape:window-width="1920"
+     inkscape:window-height="1111"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
   <g
-     id="g1"
-     transform="matrix(1.3137196,0,0,1.5178131,-180.23091,-243.3687)">
+     id="g2"
+     transform="matrix(0.21026281,0,0,0.22058906,-46.162894,-86.440422)">
     <image
        width="1537.2032"
        height="1024.0001"
@@ -61,6 +60,6 @@
        id="image1"
        x="-1.7130467e-06"
        y="-3.609859"
-       style="fill:url(#linearGradient1)" />
+       style="fill:url(#linearGradient1-4)" />
   </g>
 </svg>

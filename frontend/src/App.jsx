@@ -1,7 +1,10 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import gradientBg from "./assets/bluePurpleYellowGradient.png";
+import { useTheme } from "./context/ThemeContext";
 
+// Images
+import lightBg from "./assets/bluePurpleYellowGradient.png";
+import darkBg from "./assets/darkGradient.png"; 
 
 import Home from "./pages/Home";
 import Doctors from "./pages/Doctors";
@@ -14,24 +17,25 @@ import Appointments from "./pages/Appointments";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-
 const App = () => {
+  // Get the current theme
+  const { theme } = useTheme();
+
   return (
-    <div
-      className="
-        min-h-screen
-        bg-light-gradient
-        bg-cover bg-center bg-no-repeat
-        dark:bg-slate-900
-      "
-    >
+    <div className="min-h-screen bg-light-gradient bg-cover bg-center bg-no-repeat dark:bg-slate-900">
       {/* Content wrapper */}
-      <div className="min-h-screen" style={{
-    backgroundImage: `url(${gradientBg})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-  }}>
+      <div
+        className="min-h-screen transition-all duration-500" // Added transition for smooth switch
+        style={{
+          // Dynamic background logic
+          backgroundImage: theme === 'light' 
+            ? `url(${lightBg})` // Uses lightBg image if theme is dark
+            : `url(${darkBg})`, // Uses darkBg image if theme is dark
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
         <Navbar />
 
         <Routes>
@@ -52,6 +56,5 @@ const App = () => {
     </div>
   );
 };
-
 
 export default App;
