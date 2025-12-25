@@ -17,12 +17,16 @@ import Appointments from "./pages/Appointments";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const App = () => {
   // Get the current theme
   const { theme } = useTheme();
 
   return (
     <div className="min-h-screen bg-light-gradient bg-cover bg-center bg-no-repeat dark:bg-slate-900">
+      <ToastContainer />
       {/* Content wrapper */}
       <div
         className="min-h-screen transition-all duration-500" // Added transition for smooth switch
