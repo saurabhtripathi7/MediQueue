@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import dotenv from "dotenv";
+import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config();
 
@@ -166,6 +167,88 @@ export const loginUser = async (req, res) => {
 
   } catch (error) {
     console.error("Login User Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const userData = await userModel
+      .findById(userId)
+      .select("-password");
+
+    res.status(200).json({
+      success: true,
+      user: userData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// API to update user profile
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // ✅ from auth middleware
+    const { name, phone, address, dob, gender } = req.body;
+    const imageFile = req.file;
+
+    // 1️⃣ Validate required fields
+    if (!name || !phone || !dob || !gender) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields missing",
+      });
+    }
+
+    // 2️⃣ Safely parse address
+    let parsedAddress;
+    try {
+      parsedAddress =
+        typeof address === "string" ? JSON.parse(address) : address;
+    } catch {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid address format",
+      });
+    }
+
+    // 3️⃣ Build update object
+    const updateData = {
+      name,
+      phone,
+      address: parsedAddress,
+      dob,
+      gender,
+    };
+
+    // 4️⃣ Upload image if present
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(
+        imageFile.path,
+        { resource_type: "image" }
+      );
+      updateData.image = imageUpload.secure_url;
+    }
+
+    // 5️⃣ Single DB update
+    await userModel.findByIdAndUpdate(userId, updateData);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+    });
+
+  } catch (error) {
+    console.error("Update Profile Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",

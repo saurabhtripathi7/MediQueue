@@ -20,8 +20,12 @@ connectCloudinary();
 // ================= MIDDLEWARES =================
 app.use(express.json()); // parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // parse form-data text fields
-app.use(cors());
-
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend URL
+    credentials: true,               // 🔴 REQUIRED for cookies
+  })
+);
 // ================= ROUTES =================
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);

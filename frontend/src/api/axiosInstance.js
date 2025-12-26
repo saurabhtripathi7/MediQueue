@@ -7,6 +7,7 @@ eg: api.get("/doctors")  -----------------> http://localhost:4000/api/doctors
 */
 const api = axios.create({
   baseURL: "http://localhost:4000/api",
+  withCredentials: true, // send cookies (if any) with requests
 });
 
 /* REQUEST INTERCEPTOR ----------------->
@@ -59,9 +60,15 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem("refreshToken");
 
-        const res = await axios.post("http://localhost:4000/api/auth/refresh", {
-          refreshToken,
-        });
+        if (!refreshToken) {
+          localStorage.clear();
+          window.location.href = "/login";
+          return Promise.reject(error);
+        }
+
+        const res = await api.post("/user/refresh", {
+        refreshToken,
+      });
 
         // 2️⃣ Store new access token
         localStorage.setItem("accessToken", res.data.accessToken);

@@ -1,38 +1,78 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { assets } from "../assets/assets";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronRight, User, Calendar, LogOut } from "lucide-react";
+import { Menu, ChevronRight, User, Calendar, LogOut, Sun, Moon} from "lucide-react";
 import MobileMenu from "./MobileMenu";
+import { AppContext } from "../context/AppContext";
 
+
+/**
+ * Navbar Component
+ * ================
+ * Manages the top navigation, authentication UI state, and responsive menu.
+ *
+ * Architecture Notes:
+ * - Authentication state is derived directly from `localStorage` to ensure
+ * compatibility with Axios interceptors.
+ * - This component listens to route changes to automatically update UI
+ * if a token expires or is removed elsewhere.
+ */
 const Navbar = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState(true);
+  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const { userData } = useContext(AppContext);
+
+  /* ----------------------------------------------------------------
+   * STATE MANAGEMENT
+   * ---------------------------------------------------------------- */
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
+  /**
+   * Auth Check Effect
+   * -----------------
+   * Runs on mount and every time the route changes (`location.pathname`).
+   * This ensures that if the user logs out or the token is cleared
+   * while navigating, the Navbar UI updates immediately.
+   */
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    setIsAuthenticated(!!token);
+  }, [location.pathname]);
+
+  /**
+   * Handle Logout
+   * -------------
+   * 1. Scrolls to top for UX.
+   * 2. Clears storage tokens (access & refresh).
+   * 3. Resets local UI state.
+   * 4. Redirects to login.
+   */
   const logout = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    setToken(false);
-    navigate("/login");
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
+    setIsAuthenticated(false);
     setShowMenu(false);
     setShowDropdown(false);
+
+    navigate("/login");
   };
 
   return (
     <>
-
-      {/* 1. STICKY SHELL */}
+      {/* Container: Sticky Shell */}
       <div className="sticky top-0 z-50 pt-4 transition-all duration-300">
-        
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          
-          {/* 2. VISUAL CARD (The White Floating Box) */}
+          {/* Floating Glassmorphism Card */}
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-100 dark:border-gray-800 shadow-sm rounded-2xl px-6 py-3 flex items-center justify-between">
-            
-            {/* LOGO */}
+            {/* Logo Section */}
             <img
               onClick={() => {
                 navigate("/");
@@ -40,10 +80,10 @@ const Navbar = () => {
               }}
               src={assets.main_logo}
               alt="MediQueue"
-              className="h-9 w-auto shrink-0 object-contain cursor-pointer"
+              className="h-9 w-auto cursor-pointer"
             />
 
-            {/* DESKTOP MENU */}
+            {/* Desktop Navigation Links */}
             <ul className="hidden md:flex items-center gap-8 font-medium text-sm">
               {[
                 { path: "/", label: "HOME" },
@@ -62,13 +102,13 @@ const Navbar = () => {
                         className={
                           isActive
                             ? "text-primary font-bold"
-                            : "text-gray-700 dark:text-gray-300 transition-colors hover:text-primary"
+                            : "text-gray-700 dark:text-gray-300 hover:text-primary"
                         }
                       >
                         {link.label}
                       </span>
                       <div
-                        className={`absolute -bottom-1 left-0 h-0.5 bg-primary rounded-full transition-all duration-300 ${
+                        className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all ${
                           isActive ? "w-full" : "w-0 group-hover:w-full"
                         }`}
                       />
@@ -78,16 +118,36 @@ const Navbar = () => {
               ))}
             </ul>
 
-            {/* RIGHT ACTIONS */}
+            {/* Right Side: Theme Toggle & User Actions */}
             <div className="flex items-center gap-4">
+              {/* THEME TOGGLE */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-lg"
+                className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 border border-black dark:border-white"
+                aria-label="Toggle Theme"
               >
-                {theme === "light" ? "🌙" : "☀️"}
+                {/* We use key={theme} so Framer Motion knows to trigger the animation on change */}
+                <motion.div
+                  key={theme}
+                  initial={{ y: -5, opacity: 0, rotate: -90 }}
+                  animate={{ y: 0, opacity: 1, rotate: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {theme === "light" ? (
+                    // If Light mode, show Moon (to switch to dark)
+                    <Moon
+                      size={20}
+                      className="text-gray-600 dark:text-gray-300"
+                    />
+                  ) : (
+                    // If Dark mode, show Sun (to switch to light)
+                    <Sun size={20} className="text-yellow-500" />
+                  )}
+                </motion.div>
               </button>
 
-              {token ? (
+              {/* User Profile / Login Button */}
+              {isAuthenticated ? (
                 <div
                   className="hidden md:flex items-center gap-2 cursor-pointer relative"
                   onMouseEnter={() => setShowDropdown(true)}
@@ -95,12 +155,13 @@ const Navbar = () => {
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   <img
-                    src={assets.profile_pic}
-                    alt="pfp"
-                    className="w-9 h-9 rounded-full object-cover border border-gray-300 dark:border-gray-700"
+                    src={userData?.image || assets.user_placeholder}
+                    alt="profile"
+                    className="w-9 h-9 rounded-full border"
                   />
                   <ChevronRight size={14} className="rotate-90 opacity-60" />
 
+                  {/* Dropdown Menu */}
                   <AnimatePresence>
                     {showDropdown && (
                       <motion.div
@@ -109,28 +170,22 @@ const Navbar = () => {
                         exit={{ opacity: 0, y: -10 }}
                         className="absolute top-0 right-0 pt-12 z-20"
                       >
-                        <div className="bg-white dark:bg-black rounded-xl shadow-xl min-w-48 border border-gray-200 dark:border-gray-800 overflow-hidden">
+                        <div className="bg-white dark:bg-black rounded-xl shadow-xl min-w-48 border overflow-hidden">
                           <p
-                            onClick={() => {
-                              window.scrollTo(0, 0);
-                              navigate("my-profile");
-                            }}
-                            className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer flex items-center gap-2 text-sm"
+                            onClick={() => navigate("/my-profile")}
+                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-2 text-sm"
                           >
                             <User size={16} /> My Profile
                           </p>
                           <p
-                            onClick={() => {
-                              window.scrollTo(0, 0);
-                              navigate("my-appointments");
-                            }}
-                            className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer flex items-center gap-2 text-sm"
+                            onClick={() => navigate("/my-appointments")}
+                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-2 text-sm"
                           >
                             <Calendar size={16} /> Appointments
                           </p>
                           <p
                             onClick={logout}
-                            className="px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2 border-t border-gray-200 dark:border-gray-800 text-sm"
+                            className="px-4 py-3 text-red-500 hover:bg-red-50 cursor-pointer flex items-center gap-2 border-t text-sm"
                           >
                             <LogOut size={16} /> Logout
                           </p>
@@ -141,19 +196,17 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  onClick={() => {
-                    window.scrollTo(0, 0);
-                    navigate("/login");
-                  }}
-                  className="bg-primary text-white px-6 py-2 rounded-full hidden md:block hover:bg-secondary transition-all text-sm font-medium"
+                  onClick={() => navigate("/login")}
+                  className="bg-primary text-white px-6 py-2 rounded-full hidden md:block"
                 >
                   Create account
                 </button>
               )}
 
+              {/* Mobile Menu Trigger */}
               <button
                 onClick={() => setShowMenu(true)}
-                className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
+                className="md:hidden p-2 rounded-lg"
               >
                 <Menu size={24} />
               </button>
@@ -161,10 +214,11 @@ const Navbar = () => {
           </div>
         </div>
 
+        {/* Mobile Navigation Drawer */}
         <MobileMenu
           showMenu={showMenu}
           setShowMenu={setShowMenu}
-          token={token}
+          isAuthenticated={isAuthenticated}
           logout={logout}
         />
       </div>
