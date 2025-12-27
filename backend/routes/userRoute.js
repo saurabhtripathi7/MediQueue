@@ -6,6 +6,7 @@ import {
   updateProfile,
   bookAppointment,
   listAppointments,
+  cancelAppointment,
 } from "../controllers/userController.js";
 import { refreshAccessToken } from "../controllers/authController.js";
 import authUser from "../middlewares/authUser.js";
@@ -26,5 +27,7 @@ userRouter.post("/update-profile", upload.single("image"), authUser, updateProfi
 userRouter.post("/book-appointment", authUser, bookAppointment);
 
 userRouter.get("/appointments", authUser, listAppointments);
+
+userRouter.post("/cancel-appointment", authUser, cancelAppointment);
 
 export default userRouter;
