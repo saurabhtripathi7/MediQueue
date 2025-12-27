@@ -23,27 +23,27 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { userData } = useContext(AppContext);
-
+  const { userData, authReady } = useContext(AppContext);
+  
   /* ----------------------------------------------------------------
-   * STATE MANAGEMENT
-   * ---------------------------------------------------------------- */
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-
-  /**
-   * Auth Check Effect
-   * -----------------
-   * Runs on mount and every time the route changes (`location.pathname`).
+  * STATE MANAGEMENT
+  * ---------------------------------------------------------------- */
+ const [isAuthenticated, setIsAuthenticated] = useState(false);
+ const [showMenu, setShowMenu] = useState(false);
+ const [showDropdown, setShowDropdown] = useState(false);
+ 
+ /**
+  * Auth Check Effect
+  * -----------------
+  * Runs on mount and every time the route changes (`location.pathname`).
    * This ensures that if the user logs out or the token is cleared
    * while navigating, the Navbar UI updates immediately.
-   */
-  useEffect(() => {
+ */
+useEffect(() => {
     const token = localStorage.getItem("accessToken");
     setIsAuthenticated(!!token);
   }, [location.pathname]);
-
+  
   /**
    * Handle Logout
    * -------------
@@ -51,7 +51,7 @@ const Navbar = () => {
    * 2. Clears storage tokens (access & refresh).
    * 3. Resets local UI state.
    * 4. Redirects to login.
-   */
+  */
   const logout = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
@@ -61,10 +61,11 @@ const Navbar = () => {
     setIsAuthenticated(false);
     setShowMenu(false);
     setShowDropdown(false);
-
+    
     navigate("/login");
   };
-
+  
+  if (!authReady) return null; // ⛔ wait before rendering
   return (
     <>
       {/* Container: Sticky Shell */}
@@ -155,7 +156,7 @@ const Navbar = () => {
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   <img
-                    src={userData?.image || assets.user_placeholder}
+                    src={userData?.image || assets.defaultUserIcon}
                     alt="profile"
                     className="w-9 h-9 rounded-full border"
                   />

@@ -1,61 +1,46 @@
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-
-/**
- * We use a pre-configured Axios instance instead of raw axios.
- *
- * This axios instance:
- *  - Automatically attaches the access token to every request
- *  - Detects expired access tokens (401 responses)
- *  - Calls the refresh-token API when needed
- *  - Retries the original request transparently
- *
- * IMPORTANT:
- * This means React components and contexts NEVER deal with tokens directly.
- */
 import api from "../api/axiosInstance";
 
 /**
- * Global application context
+ * Global Application Context
  * --------------------------
- * Used to share:
- *  - Public app data (doctors list)
- *  - Auth-dependent user data (profile)
- *  - Reusable data-fetching functions
+ * Responsibilities:
+ * - Public data (doctors list)
+ * - Auth-dependent user data (profile)
+ * - Centralized data-fetching helpers
  *
- * Auth logic itself is NOT stored here.
+ * IMPORTANT:
+ * - This context does NOT manage tokens
+ * - Token lifecycle is handled entirely by axios interceptors
  */
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
-  /**
-   * Shared UI constants
-   * -------------------
-   * Centralized here to avoid magic values scattered across components.
-   */
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+
+  /* =========================================================
+     UI CONSTANTS
+     ========================================================= */
   const currencySymbol = "₹";
+
+  /* =========================================================
+     AUTH BOOTSTRAP STATE
+     =========================================================
+     authReady = true means:
+     - token check done
+     - refresh (if needed) completed
+     - profile fetch attempt completed
+     - UI can safely render
+  */
+  const [authReady, setAuthReady] = useState(false);
 
   /* =========================================================
      DOCTORS (PUBLIC DATA)
      ========================================================= */
-
-  /**
-   * Doctors list
-   * ------------
-   * Public data.
-   * Does NOT require authentication.
-   * Safe to fetch on app load.
-   */
   const [doctors, setDoctors] = useState([]);
 
-  /**
-   * Fetch doctors from backend
-   *
-   * Uses axios instance (`api`):
-   * - If access token exists → attached automatically
-   * - If token is expired → axios refreshes it silently
-   * - If route is public → token is ignored
-   */
   const getDoctorsData = async () => {
     try {
       const { data } = await api.get("/doctor/list");
@@ -66,14 +51,6 @@ const AppContextProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
-      /**
-       * Any final error that reaches here means:
-       * - Network error
-       * - Backend error
-       * - Refresh also failed
-       *
-       * Auth failures are already handled inside axios interceptors.
-       */
       console.error("Error fetching doctors:", error);
       toast.error(
         error.response?.data?.message || "Failed to fetch doctors"
@@ -81,10 +58,6 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Fetch doctors once when app loads.
-   * Safe because this route is public.
-   */
   useEffect(() => {
     getDoctorsData();
   }, []);
@@ -92,29 +65,8 @@ const AppContextProvider = ({ children }) => {
   /* =========================================================
      USER PROFILE (PROTECTED DATA)
      ========================================================= */
-
-  /**
-   * Logged-in user's profile data
-   *
-   * null  → not logged in / not loaded
-   * object → profile loaded
-   */
   const [userData, setUserData] = useState(null);
 
-  /**
-   * Fetch logged-in user's profile
-   *
-   * This is a PROTECTED route.
-   * Requirements:
-   *  - Access token must exist
-   *  - authUser middleware must pass
-   *
-   * Refresh-token flow (important):
-   *  - If access token is expired → backend returns 401
-   *  - Axios interceptor calls /user/refresh
-   *  - New access token is stored
-   *  - THIS request is retried automatically
-   */
   const loadUserProfileData = async () => {
     try {
       const { data } = await api.get("/user/get-profile");
@@ -122,108 +74,103 @@ const AppContextProvider = ({ children }) => {
       if (data.success) {
         setUserData(data.user);
       } else {
-        toast.error(data.message);
+        setUserData(null);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to fetch user profile data"
-      );
+      setUserData(null);
     }
   };
 
   /**
-   * Load profile ONLY if user is logged in.
-   *
-   * Why?
-   * - Prevent unnecessary 401 errors
-   * - Avoid refresh attempts when user is logged out
-   * - Keep context auth-agnostic
+   * AUTH BOOTSTRAP EFFECT
+   * --------------------
+   * Runs once on app load
    */
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) {
-      loadUserProfileData(); // Load profile on app start if logged in
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      setUserData(null);
+      setAuthReady(true);
+      return;
     }
-    else {
-      setUserData(null); // Clear user data on logout
-    }
+
+    const bootstrapAuth = async () => {
+      await loadUserProfileData();
+      setAuthReady(true);
+    };
+
+    bootstrapAuth();
   }, []);
 
+  /* =========================================================
+     UPDATE USER PROFILE (SAFE VERSION)
+     ========================================================= */
+  const updateUserProfileData = async (profileData) => {
+    try {
+      const formData = new FormData();
 
-  /**
- * Update logged-in user's profile
- *
- * Sends multipart/form-data because image upload may be included.
- * After successful update:
- *  - Refreshes user profile data
- *  - Keeps global state in sync
- */
-const updateUserProfileData = async (profileData) => {
-  try {
-    const formData = new FormData();
+      // Append ONLY if value exists
+      if (profileData.name) formData.append("name", profileData.name);
+      if (profileData.phone) formData.append("phone", profileData.phone);
+      if (profileData.dob) formData.append("dob", profileData.dob);
+      if (profileData.gender) formData.append("gender", profileData.gender);
 
-    // Append primitive fields
-    formData.append("name", profileData.name);
-    formData.append("phone", profileData.phone);
-    formData.append("dob", profileData.dob);
-    formData.append("gender", profileData.gender);
+      if (profileData.address) {
+        formData.append(
+          "address",
+          JSON.stringify(profileData.address)
+        );
+      }
 
-    // Address must be stringified (backend expects JSON)
-    formData.append("address", JSON.stringify(profileData.address));
+      if (profileData.image instanceof File) {
+        formData.append("image", profileData.image);
+      }
 
-    // Optional image
-    if (profileData.image instanceof File) {
-      formData.append("image", profileData.image);
+      const { data } = await api.post(
+        "/user/update-profile",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success("Profile updated successfully");
+        await loadUserProfileData();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Update profile error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update profile"
+      );
     }
-
-    const { data } = await api.post(
-      "/user/update-profile",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-    if (data.success) {
-      toast.success("Profile updated successfully");
-
-      // Reload fresh profile from backend
-      await loadUserProfileData();
-    } else {
-      toast.error(data.message);
-    }
-  } catch (error) {
-    console.error("Update profile error:", error);
-    toast.error(
-      error.response?.data?.message || "Failed to update profile"
-    );
-  }
-};
-
-
+  };
 
   /* =========================================================
-     CONTEXT VALUE
+     CONTEXT EXPORT
      ========================================================= */
-
-  /**
-   * Everything exposed to the rest of the app
-   *
-   * doctors              → public doctor list
-   * getDoctorsData       → refetch doctors when needed
-   * userData             → logged-in user's profile
-   * loadUserProfileData  → refetch profile after login/update
-   * currencySymbol       → UI constant
-   */
   return (
     <AppContext.Provider
       value={{
         doctors,
         getDoctorsData,
+
         userData,
         setUserData,
         loadUserProfileData,
+
+        authReady, // 👈 MUST be used by Navbar / protected UI
+
         currencySymbol,
         updateUserProfileData,
+        backendURL,
       }}
     >
       {children}

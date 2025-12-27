@@ -16,6 +16,8 @@ import upload_icon from "./upload_icon.png";
 import stripe_logo from "./stripe_logo.png";
 import razorpay_logo from "./razorpay_logo.png";
 import main_logo from "./main_logo.svg";
+import defaultUserIcon from "./defaultUserIcon.png";
+
 // import doc1 from "./doc1.png";
 // import doc2 from "./doc2.png";
 // import doc3 from "./doc3.png";
@@ -78,6 +80,7 @@ export const assets = {
   stripe_logo,
   razorpay_logo,
   main_logo,
+  defaultUserIcon,
 };
 
 export const specialityData = [

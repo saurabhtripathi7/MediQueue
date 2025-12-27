@@ -20,7 +20,7 @@ const authUser = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 4️⃣ Attach user to request
-    req.user = { id: decoded.id };
+    req.user = { _id: decoded.id };
 
     next();
   } catch (error) {

@@ -3,6 +3,7 @@ import api from "../api/axiosInstance.js";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import {
   Mail,
   Lock,
@@ -52,7 +53,7 @@ const Login = () => {
     setFormData({
       name: "",
       email: "guest@example.com",
-      password: "12345678",
+      password: "Guest@123",
     });
   };
 
@@ -94,6 +95,15 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (token) {
+      toast.info("You are already logged in");
+      navigate("/", { replace: true }); // replace:true to prevent going back to login
+    }
+  }, [navigate]);
 
   /* =========================
      JSX
@@ -181,7 +191,11 @@ const Login = () => {
               disabled={isLoading}
               className="w-full bg-primary text-white py-3 rounded-lg"
             >
-              {isLoading ? "Logging in..." : authMode === "signup" ? "Sign Up" : "Login"}
+              {isLoading
+                ? "Logging in..."
+                : authMode === "signup"
+                ? "Sign Up"
+                : "Login"}
             </button>
 
             <button
@@ -197,14 +211,20 @@ const Login = () => {
             {authMode === "signup" ? (
               <p>
                 Already have an account?{" "}
-                <button onClick={() => setAuthMode("login")} className="text-primary">
+                <button
+                  onClick={() => setAuthMode("login")}
+                  className="text-primary"
+                >
                   Login
                 </button>
               </p>
             ) : (
               <p>
                 Don’t have an account?{" "}
-                <button onClick={() => setAuthMode("signup")} className="text-primary">
+                <button
+                  onClick={() => setAuthMode("signup")}
+                  className="text-primary"
+                >
                   Sign up
                 </button>
               </p>

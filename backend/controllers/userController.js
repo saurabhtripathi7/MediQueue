@@ -4,6 +4,10 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
+import doctorModel from "../models/doctorModel.js";
+import appointmentModel from "../models/appointmentModel.js";
+import { convertTo24Hr } from "../utils/convertTo24Hr.js";
+
 
 dotenv.config();
 
@@ -176,7 +180,7 @@ export const loginUser = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const userData = await userModel
       .findById(userId)
@@ -197,40 +201,46 @@ export const getProfile = async (req, res) => {
 // API to update user profile
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // ✅ from auth middleware
+    const userId = req.user._id;
     const { name, phone, address, dob, gender } = req.body;
     const imageFile = req.file;
 
-    // 1️⃣ Validate required fields
-    if (!name || !phone || !dob || !gender) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields missing",
-      });
+    /**
+     * Build update object dynamically
+     * Only include fields that are actually present
+     */
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (gender) updateData.gender = gender;
+
+    // DOB: validate before assigning
+    if (dob) {
+      const parsedDob = new Date(dob);
+      if (isNaN(parsedDob.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date of birth",
+        });
+      }
+      updateData.dob = parsedDob;
     }
 
-    // 2️⃣ Safely parse address
-    let parsedAddress;
-    try {
-      parsedAddress =
-        typeof address === "string" ? JSON.parse(address) : address;
-    } catch {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid address format",
-      });
+    // Address: parse only if provided
+    if (address) {
+      try {
+        updateData.address =
+          typeof address === "string" ? JSON.parse(address) : address;
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid address format",
+        });
+      }
     }
 
-    // 3️⃣ Build update object
-    const updateData = {
-      name,
-      phone,
-      address: parsedAddress,
-      dob,
-      gender,
-    };
-
-    // 4️⃣ Upload image if present
+    // Image upload (optional)
     if (imageFile) {
       const imageUpload = await cloudinary.uploader.upload(
         imageFile.path,
@@ -239,8 +249,18 @@ export const updateProfile = async (req, res) => {
       updateData.image = imageUpload.secure_url;
     }
 
-    // 5️⃣ Single DB update
-    await userModel.findByIdAndUpdate(userId, updateData);
+    // Nothing to update guard
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No changes provided",
+      });
+    }
+
+    await userModel.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -252,6 +272,188 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+
+
+// API to book appointment
+export const bookAppointment = async (req, res) => {
+  try {
+    /* =========================
+       1. AUTH (FROM TOKEN)
+       ========================= */
+    const userId = req.user._id;
+    const doctorId = req.body.doctorId || req.body.docId;
+    const { slotDate, slotTime } = req.body;
+  
+    // Basic request validation
+    if (!userId || !doctorId || !slotDate || !slotTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing booking details",
+      });
+    }
+
+    console.log("📥 Booking Request:", {
+      userId,
+      doctorId,
+      slotDate,
+      slotTime,
+    });
+
+    /* =========================
+       2. FETCH DOCTOR
+       ========================= */
+    const doctor = await doctorModel.findById(doctorId).lean();
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    if (!doctor.available) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor not available",
+      });
+    }
+
+    /* =========================
+       3. SLOT AVAILABILITY CHECK
+       ========================= */
+    const slotsBooked = doctor.slots_booked || {};
+
+    if (
+      slotsBooked[slotDate] &&
+      slotsBooked[slotDate].includes(slotTime)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Slot not available",
+      });
+    }
+
+    // Reserve slot in-memory
+    if (!slotsBooked[slotDate]) {
+      slotsBooked[slotDate] = [];
+    }
+    slotsBooked[slotDate].push(slotTime);
+
+    /* =========================
+       4. FETCH USER
+       ========================= */
+    const user = await userModel.findById(userId).lean();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    /* =========================
+       5. SAFE DATE + TIME PARSING
+       ========================= */
+    const normalizedTime = String(slotTime).trim();
+    const time24 = convertTo24Hr(normalizedTime);
+
+    if (!time24) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid slot time format: "${normalizedTime}". Expected formats like "10:30 AM" or "10:30".`,
+      });
+    }
+
+    const appointmentDateTime = new Date(`${slotDate}T${time24}`);
+
+    if (isNaN(appointmentDateTime.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid appointment date/time (slotDate="${slotDate}", slotTime="${normalizedTime}")`,
+      });
+    }
+
+    /* =========================
+       6. CREATE APPOINTMENT
+       ========================= */
+    const appointment = await appointmentModel.create({
+      userId,
+      doctorId,
+
+      // Snapshot data (history-safe)
+      userData: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+      docData: {
+        name: doctor.name,
+        speciality: doctor.speciality,
+        fees: doctor.fees,
+      },
+
+      slotDate,
+      slotTime: normalizedTime,
+      appointmentDateTime,
+
+      amount: doctor.fees,
+    });
+
+    /* =========================
+       7. UPDATE DOCTOR SLOTS
+       ========================= */
+    await doctorModel.findByIdAndUpdate(doctorId, {
+      slots_booked: slotsBooked,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully",
+      appointmentId: appointment._id,
+    });
+
+  } catch (error) {
+    console.error("❌ Book appointment error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+/**
+ * ======================================
+ *  API: Get Logged-in User Appointments
+ * ======================================
+ *  - Auth Required (Access Token)
+ *  - User identity derived from JWT (req.user)
+ *  - Sorted by latest first
+ *  - Safe & scalable
+ */
+export const listAppointments = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const appointments = await appointmentModel
+      .find({ userId })
+      .populate("doctorId", "name speciality image address fees")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    console.error("List Appointments Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch appointments",
     });
   }
 };
