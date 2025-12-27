@@ -1,27 +1,54 @@
+/**
+ * ======================================================
+ * USER CONTROLLER
+ * ======================================================
+ * This file contains all user-facing business logic:
+ * - Authentication (register, login)
+ * - Profile management
+ * - Appointment booking & management
+ *
+ * IMPORTANT CONVENTION (used everywhere below):
+ * ------------------------------------------------------
+ * 🔐 Auth layer (JWT / middleware / controllers) uses: `id`
+ * 🗄 Database layer (MongoDB / Mongoose) uses: `_id`
+ *
+ * `req.user.id`  → authenticated user identity (from token)
+ * `_id`          → MongoDB document identifier
+ *
+ * They usually hold the same value, but represent
+ * DIFFERENT CONCEPTS and must not be mixed.
+ */
+
 import userModel from "../models/userModel.js";
+import doctorModel from "../models/doctorModel.js";
+import appointmentModel from "../models/appointmentModel.js";
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-import doctorModel from "../models/doctorModel.js";
-import appointmentModel from "../models/appointmentModel.js";
-import { convertTo24Hr } from "../utils/convertTo24Hr.js";
 
+import { convertTo24Hr } from "../utils/convertTo24Hr.js";
 
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-// ============================
-// REGISTER USER
-// ============================
+/* ======================================================
+   AUTH: REGISTER USER
+   ======================================================
+   - Validates input
+   - Creates user in DB
+   - Issues access + refresh tokens
+   - Stores refresh token for rotation/revocation
+*/
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1️⃣ Validate input
+    /* ---------- Basic input validation ---------- */
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -43,7 +70,7 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // 2️⃣ Check if user already exists
+    /* ---------- Prevent duplicate accounts ---------- */
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -52,46 +79,44 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // 3️⃣ Hash password
+    /* ---------- Secure password storage ---------- */
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4️⃣ Create user
+    /* ---------- Create user document ---------- */
     const newUser = await userModel.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    // 5️⃣ Validate env secrets
     if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-      throw new Error("JWT secrets are not defined");
+      throw new Error("JWT secrets are missing");
     }
 
-    // 6️⃣ Generate tokens
+    /* ---------- Token generation ---------- */
+    // Access token → short-lived (used on every request)
+    // Refresh token → long-lived (used to rotate access tokens)
     const accessToken = jwt.sign(
-      { id: newUser._id },
+      { id: newUser._id }, // Mongo _id stored as app-level id
       JWT_SECRET,
-      { expiresIn: "15m" } // short-lived
+      { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
       { id: newUser._id },
       JWT_REFRESH_SECRET,
-      { expiresIn: "7d" } // long-lived
+      { expiresIn: "7d" }
     );
 
-    // 7️⃣ Save refresh token in DB
-    // Could be used later for token revocation 
+    /* ---------- Persist refresh token ---------- */
     newUser.refreshToken = refreshToken;
     await newUser.save();
 
-    // 8️⃣ Response
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       accessToken,
       refreshToken,
     });
-
   } catch (error) {
     console.error("Register User Error:", error);
     res.status(500).json({
@@ -101,12 +126,17 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
+/* ======================================================
+   AUTH: LOGIN USER
+   ======================================================
+   - Verifies credentials
+   - Rotates refresh token
+   - Issues fresh access token
+*/
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1️⃣ Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -121,54 +151,45 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // 2️⃣ Check if user exists to log-in that user
+    /* ---------- Fetch user with password ---------- */
     const user = await userModel.findOne({ email }).select("+password");
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials or user not registered",
+        message: "Invalid credentials",
       });
     }
 
-    // 3️⃣ Compare password
-    const isPasswordMatch = await bcrypt.compare(password, user.password); //compare with saved hashed password from DB
-    if (!isPasswordMatch) {
+    /* ---------- Password verification ---------- */
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password",
-      });   
+        message: "Invalid credentials",
+      });
     }
 
-    // 4️⃣ Validate env secrets
-    if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-      throw new Error("JWT secrets are not defined");
-    }
-
-    // 5️⃣ Generate new access token
+    /* ---------- Token rotation ---------- */
     const accessToken = jwt.sign(
       { id: user._id },
       JWT_SECRET,
       { expiresIn: "15m" }
     );
 
-    // 6️⃣ Generate new refresh token
     const refreshToken = jwt.sign(
       { id: user._id },
       JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );
 
-    // 7️⃣ Store refresh token in DB (rotate)
     user.refreshToken = refreshToken;
     await user.save();
 
-    // 8️⃣ Send response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       accessToken,
       refreshToken,
     });
-
   } catch (error) {
     console.error("Login User Error:", error);
     res.status(500).json({
@@ -178,44 +199,54 @@ export const loginUser = async (req, res) => {
   }
 };
 
+/* ======================================================
+   USER: GET PROFILE
+   ======================================================
+   - Auth protected
+   - Uses identity from JWT (req.user.id)
+   - Never trusts frontend-sent userId
+*/
 export const getProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id; // 🔐 from access token
 
-    const userData = await userModel
+    const user = await userModel
       .findById(userId)
-      .select("-password");
+      .select("-password"); // never expose password
 
     res.status(200).json({
       success: true,
-      user: userData,
+      user,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch profile",
     });
   }
 };
 
-// API to update user profile
+/* ======================================================
+   USER: UPDATE PROFILE
+   ======================================================
+   - Partial updates supported
+   - Only provided fields are modified
+   - Image upload handled via Cloudinary
+*/
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { name, phone, address, dob, gender } = req.body;
     const imageFile = req.file;
 
-    /**
-     * Build update object dynamically
-     * Only include fields that are actually present
-     */
+    /* ---------- Build update object dynamically ---------- */
     const updateData = {};
 
     if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
     if (gender) updateData.gender = gender;
 
-    // DOB: validate before assigning
+    /* ---------- Date validation ---------- */
     if (dob) {
       const parsedDob = new Date(dob);
       if (isNaN(parsedDob.getTime())) {
@@ -227,7 +258,7 @@ export const updateProfile = async (req, res) => {
       updateData.dob = parsedDob;
     }
 
-    // Address: parse only if provided
+    /* ---------- Address parsing ---------- */
     if (address) {
       try {
         updateData.address =
@@ -240,16 +271,15 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    // Image upload (optional)
+    /* ---------- Optional image upload ---------- */
     if (imageFile) {
-      const imageUpload = await cloudinary.uploader.upload(
-        imageFile.path,
-        { resource_type: "image" }
-      );
-      updateData.image = imageUpload.secure_url;
+      const upload = await cloudinary.uploader.upload(imageFile.path, {
+        resource_type: "image",
+      });
+      updateData.image = upload.secure_url;
     }
 
-    // Nothing to update guard
+    /* ---------- Guard: nothing to update ---------- */
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
         success: false,
@@ -266,7 +296,6 @@ export const updateProfile = async (req, res) => {
       success: true,
       message: "Profile updated successfully",
     });
-
   } catch (error) {
     console.error("Update Profile Error:", error);
     res.status(500).json({
@@ -276,19 +305,31 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-
-
-// API to book appointment
+/* ======================================================
+   APPOINTMENT: BOOK
+   ======================================================
+   - Auth protected
+   - Uses authenticated user identity (req.user.id)
+   - Prevents double booking
+   - Stores snapshot of user & doctor data
+   - Updates doctor slot availability
+*/
 export const bookAppointment = async (req, res) => {
   try {
-    /* =========================
-       1. AUTH (FROM TOKEN)
-       ========================= */
-    const userId = req.user._id;
+    /* --------------------------------------------------
+       1️⃣ AUTHENTICATED USER ID
+       --------------------------------------------------
+       - Comes from verified JWT
+       - Never trust frontend for userId
+    */
+    const userId = req.user.id;
+
+    /* --------------------------------------------------
+       2️⃣ REQUEST DATA
+       -------------------------------------------------- */
     const doctorId = req.body.doctorId || req.body.docId;
     const { slotDate, slotTime } = req.body;
-  
-    // Basic request validation
+
     if (!userId || !doctorId || !slotDate || !slotTime) {
       return res.status(400).json({
         success: false,
@@ -296,16 +337,11 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    console.log("📥 Booking Request:", {
-      userId,
-      doctorId,
-      slotDate,
-      slotTime,
-    });
-
-    /* =========================
-       2. FETCH DOCTOR
-       ========================= */
+    /* --------------------------------------------------
+       3️⃣ FETCH DOCTOR
+       --------------------------------------------------
+       - lean() for performance (read-only)
+    */
     const doctor = await doctorModel.findById(doctorId).lean();
 
     if (!doctor) {
@@ -322,30 +358,32 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    /* =========================
-       3. SLOT AVAILABILITY CHECK
-       ========================= */
+    /* --------------------------------------------------
+       4️⃣ SLOT AVAILABILITY CHECK
+       --------------------------------------------------
+       slots_booked structure:
+       {
+         "2025-01-01": ["10:30 AM", "11:00 AM"]
+       }
+    */
     const slotsBooked = doctor.slots_booked || {};
 
-    if (
-      slotsBooked[slotDate] &&
-      slotsBooked[slotDate].includes(slotTime)
-    ) {
+    if (slotsBooked[slotDate]?.includes(slotTime)) {
       return res.status(400).json({
         success: false,
         message: "Slot not available",
       });
     }
 
-    // Reserve slot in-memory
-    if (!slotsBooked[slotDate]) {
-      slotsBooked[slotDate] = [];
-    }
-    slotsBooked[slotDate].push(slotTime);
+    // Reserve slot locally before DB write
+    slotsBooked[slotDate] = [...(slotsBooked[slotDate] || []), slotTime];
 
-    /* =========================
-       4. FETCH USER
-       ========================= */
+    /* --------------------------------------------------
+       5️⃣ FETCH USER (FOR SNAPSHOT)
+       --------------------------------------------------
+       Snapshot is stored to preserve history
+       even if user updates profile later
+    */
     const user = await userModel.findById(userId).lean();
 
     if (!user) {
@@ -355,36 +393,41 @@ export const bookAppointment = async (req, res) => {
       });
     }
 
-    /* =========================
-       5. SAFE DATE + TIME PARSING
-       ========================= */
+    /* --------------------------------------------------
+       6️⃣ NORMALIZE & VALIDATE TIME
+       -------------------------------------------------- */
     const normalizedTime = String(slotTime).trim();
     const time24 = convertTo24Hr(normalizedTime);
 
     if (!time24) {
       return res.status(400).json({
         success: false,
-        message: `Invalid slot time format: "${normalizedTime}". Expected formats like "10:30 AM" or "10:30".`,
+        message: "Invalid slot time format",
       });
     }
 
     const appointmentDateTime = new Date(`${slotDate}T${time24}`);
-
     if (isNaN(appointmentDateTime.getTime())) {
       return res.status(400).json({
         success: false,
-        message: `Invalid appointment date/time (slotDate="${slotDate}", slotTime="${normalizedTime}")`,
+        message: "Invalid appointment date/time",
       });
     }
 
-    /* =========================
-       6. CREATE APPOINTMENT
-       ========================= */
+    /* --------------------------------------------------
+       7️⃣ CREATE APPOINTMENT
+       -------------------------------------------------- */
     const appointment = await appointmentModel.create({
-      userId,
+      userId,          // Stored as ObjectId internally
       doctorId,
 
-      // Snapshot data (history-safe)
+      slotDate,
+      slotTime: normalizedTime,
+      appointmentDateTime,
+
+      amount: doctor.fees,
+
+      // Immutable snapshots (important for history)
       userData: {
         name: user.name,
         email: user.email,
@@ -395,17 +438,11 @@ export const bookAppointment = async (req, res) => {
         speciality: doctor.speciality,
         fees: doctor.fees,
       },
-
-      slotDate,
-      slotTime: normalizedTime,
-      appointmentDateTime,
-
-      amount: doctor.fees,
     });
 
-    /* =========================
-       7. UPDATE DOCTOR SLOTS
-       ========================= */
+    /* --------------------------------------------------
+       8️⃣ UPDATE DOCTOR SLOTS
+       -------------------------------------------------- */
     await doctorModel.findByIdAndUpdate(doctorId, {
       slots_booked: slotsBooked,
     });
@@ -413,12 +450,10 @@ export const bookAppointment = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Appointment booked successfully",
-      appointmentId: appointment._id,
+      appointmentId: appointment._id, // DB document id
     });
-
   } catch (error) {
-    console.error("❌ Book appointment error:", error);
-
+    console.error("Book Appointment Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -427,33 +462,127 @@ export const bookAppointment = async (req, res) => {
 };
 
 
-/**
- * ======================================
- *  API: Get Logged-in User Appointments
- * ======================================
- *  - Auth Required (Access Token)
- *  - User identity derived from JWT (req.user)
- *  - Sorted by latest first
- *  - Safe & scalable
- */
+/* ======================================================
+   APPOINTMENT: LIST USER APPOINTMENTS
+   ======================================================
+   - Auth protected
+   - Returns appointments for logged-in user only
+   - Sorted by most recent first
+*/
 export const listAppointments = async (req, res) => {
   try {
-    const userId = req.user._id;
+    /* --------------------------------------------------
+       1️⃣ AUTHENTICATED USER ID
+       -------------------------------------------------- */
+    const userId = req.user.id;
 
+    /* --------------------------------------------------
+       2️⃣ FETCH APPOINTMENTS
+       --------------------------------------------------
+       - populate doctor details for UI
+       - exclude sensitive data
+    */
     const appointments = await appointmentModel
       .find({ userId })
       .populate("doctorId", "name speciality image address fees")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       appointments,
     });
   } catch (error) {
     console.error("List Appointments Error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch appointments",
+    });
+  }
+};
+
+/* ======================================================
+   APPOINTMENT: CANCEL
+   ======================================================
+   - Auth protected
+   - Only appointment owner can cancel
+   - Idempotent (safe to call twice)
+   - Releases doctor slot
+*/
+export const cancelAppointment = async (req, res) => {
+  try {
+    /* --------------------------------------------------
+       1️⃣ AUTHENTICATED USER
+       -------------------------------------------------- */
+    const userId = req.user.id;
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    /* --------------------------------------------------
+       2️⃣ FETCH APPOINTMENT
+       -------------------------------------------------- */
+    const appointment = await appointmentModel.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    /* --------------------------------------------------
+       3️⃣ AUTHORISATION CHECK
+       --------------------------------------------------
+       ObjectId comparison must use string
+    */
+    if (appointment.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized action",
+      });
+    }
+
+    /* --------------------------------------------------
+       4️⃣ IDEMPOTENCY CHECK
+       -------------------------------------------------- */
+    if (appointment.cancelled) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment already cancelled",
+      });
+    }
+
+    /* --------------------------------------------------
+       5️⃣ CANCEL APPOINTMENT
+       -------------------------------------------------- */
+    appointment.cancelled = true;
+    await appointment.save();
+
+    /* --------------------------------------------------
+       6️⃣ RELEASE DOCTOR SLOT
+       --------------------------------------------------
+       $pull removes slotTime from specific date array
+    */
+    await doctorModel.findByIdAndUpdate(appointment.doctorId, {
+      $pull: {
+        [`slots_booked.${appointment.slotDate}`]: appointment.slotTime,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointment cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Cancel Appointment Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
