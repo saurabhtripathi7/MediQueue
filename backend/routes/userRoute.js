@@ -7,7 +7,10 @@ import {
   bookAppointment,
   listAppointments,
   cancelAppointment,
+  payForAppointment,
+  verifyAppointmentPayment,
 } from "../controllers/userController.js";
+
 import { refreshAccessToken } from "../controllers/authController.js";
 import authUser from "../middlewares/authUser.js";
 import upload from "../middlewares/multer.js";
@@ -29,5 +32,8 @@ userRouter.post("/book-appointment", authUser, bookAppointment);
 userRouter.get("/appointments", authUser, listAppointments);
 
 userRouter.post("/cancel-appointment", authUser, cancelAppointment);
+
+userRouter.post("/payment-razorpay", authUser, payForAppointment);
+userRouter.post("/verify-razorpay", verifyAppointmentPayment);
 
 export default userRouter;

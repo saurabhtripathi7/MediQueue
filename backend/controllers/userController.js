@@ -16,7 +16,6 @@
  * `_id`          → MongoDB document identifier
  *
  * They usually hold the same value, but represent
- * DIFFERENT CONCEPTS and must not be mixed.
  */
 
 import userModel from "../models/userModel.js";
@@ -30,6 +29,10 @@ import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
 import { convertTo24Hr } from "../utils/convertTo24Hr.js";
+
+import razorpay from "razorpay";
+import crypto from "crypto";
+
 
 dotenv.config();
 
@@ -537,9 +540,7 @@ export const cancelAppointment = async (req, res) => {
 
     /* --------------------------------------------------
        3️⃣ AUTHORISATION CHECK
-       --------------------------------------------------
-       ObjectId comparison must use string
-    */
+       -------------------------------------------------- */
     if (appointment.userId.toString() !== userId) {
       return res.status(403).json({
         success: false,
@@ -565,18 +566,38 @@ export const cancelAppointment = async (req, res) => {
 
     /* --------------------------------------------------
        6️⃣ RELEASE DOCTOR SLOT
-       --------------------------------------------------
-       $pull removes slotTime from specific date array
-    */
+       -------------------------------------------------- */
     await doctorModel.findByIdAndUpdate(appointment.doctorId, {
       $pull: {
         [`slots_booked.${appointment.slotDate}`]: appointment.slotTime,
       },
     });
 
+    /* --------------------------------------------------
+       7️⃣ REFUND (IF PAYMENT WAS MADE)
+       --------------------------------------------------
+       - Refund is a side-effect
+       - Backend decides eligibility
+    */
+    let refundInfo = null;
+
+    if (appointment.payment) {
+      try {
+        refundInfo = await refundAppointmentPayment(appointment);
+      } catch (refundError) {
+        console.error("Refund failed:", refundError);
+        // IMPORTANT:
+        // We do NOT rollback cancellation if refund fails
+        // Real systems handle refund retries separately
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Appointment cancelled successfully",
+      refund: refundInfo
+        ? "Refund initiated"
+        : "No refund applicable",
     });
   } catch (error) {
     console.error("Cancel Appointment Error:", error);
@@ -586,3 +607,337 @@ export const cancelAppointment = async (req, res) => {
     });
   }
 };
+
+
+/**
+ * ======================================================
+ * RAZORPAY CLIENT SETUP
+ * ======================================================
+ * - key_id     → public identifier (safe to expose to frontend)
+ * - key_secret → private secret (MUST stay on backend)
+ *
+ * This client is used only to:
+ * 1. Create payment orders
+ * 2. (Optional) Fetch order info
+ */
+const razorpayInstance = new razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+/**
+ * ======================================================
+ * APPOINTMENT: INITIATE PAYMENT (RAZORPAY)
+ * ======================================================
+ *
+ * PURPOSE:
+ * --------
+ * This endpoint DOES NOT take money.
+ * It only creates a Razorpay "order" (payment intent).
+ *
+ * FLOW:
+ * -----
+ * 1. Verify authenticated user
+ * 2. Validate appointment
+ * 3. Enforce ownership (security)
+ * 4. Prevent double payment (idempotency)
+ * 5. Create Razorpay order
+ * 6. Persist orderId for later verification
+ *
+ * SECURITY NOTE:
+ * --------------
+ * - Never trust frontend for amount
+ * - Never accept appointmentId without ownership check
+ */
+export const payForAppointment = async (req, res) => {
+  try {
+    /* --------------------------------------------------
+       1️⃣ AUTHENTICATED USER
+       --------------------------------------------------
+       Comes from JWT middleware (trusted identity)
+    */
+    const userId = req.user.id;
+
+    /* --------------------------------------------------
+       2️⃣ INPUT VALIDATION
+       -------------------------------------------------- */
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    /* --------------------------------------------------
+       3️⃣ FETCH APPOINTMENT
+       --------------------------------------------------
+       Needed for:
+       - amount
+       - ownership check
+       - status validation
+    */
+    const appointment = await appointmentModel.findById(appointmentId);
+
+    if (!appointment || appointment.cancelled) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found or cancelled",
+      });
+    }
+
+    /* --------------------------------------------------
+       4️⃣ OWNERSHIP CHECK (CRITICAL SECURITY)
+       --------------------------------------------------
+       Prevents IDOR attacks
+       Ensures user can only pay for their own appointment
+    */
+    if (appointment.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized payment attempt",
+      });
+    }
+
+    /* --------------------------------------------------
+       5️⃣ IDEMPOTENCY CHECK
+       --------------------------------------------------
+       Prevents:
+       - double-click payments
+       - refresh-based duplicates
+    */
+    if (appointment.payment) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment already paid",
+      });
+    }
+
+    /* --------------------------------------------------
+       6️⃣ CREATE RAZORPAY ORDER
+       --------------------------------------------------
+       IMPORTANT:
+       - Razorpay expects amount in smallest currency unit
+         INR → paise
+    */
+    const options = {
+      amount: appointment.amount * 100,
+      currency: process.env.CURRENCY || "INR",
+      receipt: appointmentId.toString(), // traceability
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    /* --------------------------------------------------
+       7️⃣ PERSIST ORDER ID
+       --------------------------------------------------
+       Creates trust bridge:
+       Appointment ←→ Razorpay Order
+    */
+    appointment.razorpayOrderId = order.id;
+    await appointment.save();
+
+    /* --------------------------------------------------
+       8️⃣ RETURN ORDER TO FRONTEND
+       --------------------------------------------------
+       Frontend uses this to open Razorpay Checkout
+    */
+    return res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Pay For Appointment Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to initiate payment",
+    });
+  }
+};
+
+/**
+ * ======================================================
+ * APPOINTMENT: VERIFY PAYMENT (RAZORPAY)
+ * ======================================================
+ *
+ * PURPOSE:
+ * --------
+ * Convert an untrusted frontend claim into
+ * a trusted backend fact using cryptography.
+ *
+ * THIS IS WHERE TRUST IS ESTABLISHED.
+ *
+ * FLOW:
+ * -----
+ * 1. Receive Razorpay payment proof
+ * 2. Locate appointment via orderId
+ * 3. Ensure idempotency
+ * 4. Recompute HMAC signature
+ * 5. Compare with Razorpay signature
+ * 6. Mark appointment as paid
+ *
+ * SECURITY GUARANTEE:
+ * -------------------
+ * Only Razorpay (and us) can generate a valid signature.
+ */
+export const verifyAppointmentPayment = async (req, res) => {
+  try {
+    /* --------------------------------------------------
+       1️⃣ EXTRACT PAYMENT PROOF
+       --------------------------------------------------
+       These values come from Razorpay Checkout
+       (forwarded by frontend)
+    */
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Incomplete payment details",
+      });
+    }
+
+    /* --------------------------------------------------
+       2️⃣ FETCH APPOINTMENT USING ORDER ID
+       --------------------------------------------------
+       Order ID is unique & backend-generated
+       (safer than appointmentId)
+    */
+    const appointment = await appointmentModel.findOne({
+      razorpayOrderId: razorpay_order_id,
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found for this order",
+      });
+    }
+
+    /* --------------------------------------------------
+       3️⃣ IDEMPOTENCY CHECK
+       --------------------------------------------------
+       Safe for retries, refreshes, duplicate callbacks
+    */
+    if (appointment.payment) {
+      return res.status(200).json({
+        success: true,
+        message: "Payment already verified",
+      });
+    }
+
+    /* --------------------------------------------------
+       4️⃣ CRYPTOGRAPHIC SIGNATURE VERIFICATION
+       --------------------------------------------------
+       Razorpay signs: 
+        order_id|payment_id
+       using our SECRET key.
+
+       We recompute the same and compare.
+    */
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment signature",
+      });
+    }
+
+    /* --------------------------------------------------
+       5️⃣ MARK PAYMENT SUCCESS
+       --------------------------------------------------
+       At this point:
+       - Money is already captured by Razorpay
+       - Authenticity is proven
+    */
+    appointment.payment = true;
+    appointment.razorpayPaymentId = razorpay_payment_id;
+    await appointment.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified successfully",
+    });
+  } catch (error) {
+    console.error("Verify Payment Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Payment verification failed",
+    });
+  }
+};
+
+/**
+ * ======================================================
+ * APPOINTMENT: REFUND PAYMENT (RAZORPAY)
+ * ======================================================
+ *
+ * PURPOSE:
+ * --------
+ * Initiates a refund via Razorpay for a paid appointment.
+ *
+ * IMPORTANT:
+ * ----------
+ * - Backend does NOT send money
+ * - Razorpay processes the refund
+ * - This API is idempotent
+ */
+export const refundAppointmentPayment = async (appointment) => {
+  // Guard 1: Only refund paid appointments
+  if (!appointment.payment) {
+    return {
+      refunded: false,
+      reason: "Appointment was not paid",
+    };
+  }
+
+  // Guard 2: Ensure payment ID exists
+  if (!appointment.razorpayPaymentId) {
+    throw new Error("Missing Razorpay payment ID");
+  }
+
+  // Guard 3: Idempotency (if you later add refunded flag)
+  if (appointment.refunded) {
+    return {
+      refunded: true,
+      message: "Refund already processed",
+    };
+  }
+
+  try {
+    // Call Razorpay refund API
+    const refund = await razorpayInstance.payments.refund(
+      appointment.razorpayPaymentId,
+      {
+        amount: appointment.amount * 100, // optional (partial refund possible)
+      }
+    );
+
+    // Mark refunded in DB (dynamic field is fine for now)
+    appointment.refunded = true;
+    appointment.refundId = refund.id;
+    await appointment.save();
+
+    return {
+      refunded: true,
+      refundId: refund.id,
+    };
+  } catch (error) {
+    console.error("Refund Error:", error);
+    throw new Error("Refund failed at payment gateway");
+  }
+};
+

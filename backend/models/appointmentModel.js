@@ -16,11 +16,11 @@ const appointmentSchema = new mongoose.Schema(
 
     // Slot info (human readable)
     slotDate: {
-      type: String, // e.g. "2025-01-05"
+      type: String,
       required: true,
     },
     slotTime: {
-      type: String, // e.g. "10:30 AM"
+      type: String,
       required: true,
     },
 
@@ -34,7 +34,7 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Payment
+    // Payment amount
     amount: {
       type: Number,
       required: true,
@@ -59,9 +59,33 @@ const appointmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    /* ======================================================
+       🔴 PAYMENT GATEWAY FIELDS (CRITICAL)
+       ====================================================== */
+
+    // Razorpay order created before checkout
+    razorpayOrderId: {
+      type: String,
+    },
+
+    // Razorpay payment id after successful payment
+    razorpayPaymentId: {
+      type: String,
+    },
+
+    // Refund tracking
+    refunded: {
+      type: Boolean,
+      default: false,
+    },
+
+    refundId: {
+      type: String,
+    },
   },
   {
-    timestamps: true, // adds createdAt & updatedAt
+    timestamps: true,
   }
 );
 
