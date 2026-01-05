@@ -24,7 +24,7 @@ const Navbar = () => {
             className="w-36 sm:w-40 cursor-pointer hover:opacity-90 transition-opacity"
             src={assets.admin_logo}
             alt="Logo"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/admin-dashboard")}
           />
           <span
             className={`px-2.5 py-0.5 rounded-full font-medium border cursor-default

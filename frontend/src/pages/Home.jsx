@@ -7,7 +7,6 @@ import Banner from "../components/Banner";
 const Home = () => {
   return (
     <div className="min-h-screen">
-      {/* Hero / Header (no animation on full page) */}
       <Header />
 
       {/* Main content wrapper */}

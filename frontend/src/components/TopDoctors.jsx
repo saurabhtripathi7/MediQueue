@@ -6,7 +6,7 @@ const TopDoctors = () => {
   const navigate = useNavigate();
   const { doctors = [] } = useContext(AppContext);
 
-  /**
+  /*
    * TOP DOCTORS LOGIC
    * 1. Prefer AVAILABLE doctors
    * 2. Sort by EXPERIENCE (descending)

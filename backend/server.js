@@ -20,10 +20,25 @@ connectCloudinary();
 // ================= MIDDLEWARES =================
 app.use(express.json()); // parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // parse form-data text fields
+
+const allowedOrigins = [
+  "http://localhost:5173", //frontend
+  "http://localhost:5174", //admin panel
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend URL
-    credentials: true,               // 🔴 REQUIRED for cookies
+    origin: function (origin, callback) {
+      // Allow server-to-server & Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
 // ================= ROUTES =================

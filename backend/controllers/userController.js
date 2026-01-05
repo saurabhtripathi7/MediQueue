@@ -435,11 +435,13 @@ export const bookAppointment = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        image: user.image,
       },
       docData: {
         name: doctor.name,
         speciality: doctor.speciality,
         fees: doctor.fees,
+        image: doctor.image,
       },
     });
 
