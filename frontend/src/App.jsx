@@ -2,7 +2,6 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { useTheme } from "./context/ThemeContext";
 
-// Images
 import lightBg from "./assets/bluePurpleYellowGradient.png";
 import darkBg from "./assets/darkGradient.png"; 
 

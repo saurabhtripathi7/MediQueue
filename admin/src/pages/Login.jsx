@@ -1,7 +1,10 @@
 import { useState, useContext } from "react";
 import axios from "axios";
 import { AdminContext } from "../context/AdminContext";
+import { DoctorContext } from "../context/DoctorContext";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
 
 const Login = () => {
   const [role, setRole] = useState("Admin");
@@ -9,26 +12,50 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const { saveAdminToken, backendURL } = useContext(AdminContext);
+  const { saveDoctorToken } = useContext(DoctorContext);
+
+  const navigate = useNavigate();
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
     try {
+      // ===================== ADMIN LOGIN =====================
       if (role === "Admin") {
-        const response = await axios.post(`${backendURL}/api/admin/login`, {
-          email,
-          password,
-        });
+        const { data } = await axios.post(
+          `${backendURL}/api/admin/login`,
+          { email, password }
+        );
 
-        if (response.data.success) {
-          saveAdminToken(response.data.token);
-          toast.success("Login successful");
+        if (data.success) {
+          saveAdminToken(data.token);
+          toast.success("Admin login successful");
+          navigate("/admin-dashboard");
+
         } else {
-          toast.error(response.data.message || "Login failed");
+          toast.error(data.message || "Login failed");
+        }
+      }
+
+      // ===================== DOCTOR LOGIN =====================
+      else {
+        const { data } = await axios.post(
+          `${backendURL}/api/doctor/login`,
+          { email, password }
+        );
+
+        if (data.success) {
+          saveDoctorToken(data.token);
+          toast.success("Doctor login successful");
+          navigate("/doctor-dashboard");
+        } else {
+          toast.error(data.message || "Login failed");
         }
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Server error");
+      toast.error(
+        error.response?.data?.message || "Server error"
+      );
     }
   };
 

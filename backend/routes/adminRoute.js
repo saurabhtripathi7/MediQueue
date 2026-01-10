@@ -10,12 +10,12 @@ import { cancelAppointment } from '../controllers/adminController.js';
 const adminRouter = express.Router();
 
 adminRouter.post('/add-doctor', authAdmin, upload.single('image'), addDoctor); //1st MW -> authenticating Admin, 2nd MW -> helper for receiving img file 
-adminRouter.post('/login', adminLogin); // Admin login route
-adminRouter.get('/all-doctors', authAdmin, allDoctors); // Protected route to get all doctors list
-adminRouter.patch('/change-availability/:docId', authAdmin, changeAvailability); // Protected route to change doctor's availability
+adminRouter.post('/login', adminLogin); 
+adminRouter.get('/all-doctors', authAdmin, allDoctors); 
+adminRouter.patch('/change-availability/:docId', authAdmin, changeAvailability); 
 adminRouter.get("/appointments", authAdmin, appointmentsAdmin);
 adminRouter.post("/cancel-appointment", authAdmin, cancelAppointment);
-adminRouter.get('/dashboard', authAdmin, getAdminDashboardStats); // Protected route to get admin dashboard stats
+adminRouter.get('/dashboard', authAdmin, getAdminDashboardStats); 
 
 
 export default adminRouter;

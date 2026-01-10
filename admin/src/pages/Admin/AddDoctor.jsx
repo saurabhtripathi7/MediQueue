@@ -14,10 +14,8 @@ const InputWrapper = ({ label, icon: Icon, children }) => (
   <div className="flex flex-col gap-1.5 w-full">
     <label className="text-sm font-medium text-gray-700 ml-1">{label}</label>
     <div className="relative group">
-      {/* Render children (input/select) FIRST */}
       {children}
       
-      {/* Render Icon SECOND so it sits on top of the input background */}
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <Icon className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
       </div>
@@ -33,7 +31,6 @@ const SectionHeader = ({ title, icon: Icon }) => (
     <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
   </div>
 );
-// --------------------------------
 
 const AddDoctor = () => {
   const [docImg, setDocImg] = useState(false);
@@ -183,7 +180,6 @@ const AddDoctor = () => {
                 </InputWrapper>
               </div>
             </div>
-
             {/* 2. Professional Info */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <SectionHeader title="Professional Information" icon={BriefcaseMedical} />

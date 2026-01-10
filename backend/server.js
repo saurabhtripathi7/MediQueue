@@ -18,7 +18,7 @@ connectDB();
 connectCloudinary();
 
 // ================= MIDDLEWARES =================
-app.use(express.json()); // parse JSON bodies
+app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // parse form-data text fields
 
 const allowedOrigins = [

@@ -193,9 +193,8 @@ const adminLogin = async (req, res) => {
   }
 };
 
-/* ============================================================================
-   API: GET ALL DOCTORS (ADMIN)
-============================================================================ */
+// API: GET ALL DOCTORS (ADMIN)
+
 const allDoctors = async (req, res) => {
   try {
     const doctors = await doctorModel.find({}).select("-password");
@@ -300,26 +299,38 @@ const cancelAppointment = async (req, res) => {
 ============================================================================ */
 const getAdminDashboardStats = async (req, res) => {
   try {
-    const [
-      doctorsCount,
-      usersCount,
-      appointmentsCount,
-      latestAppointments,
-    ] = await Promise.all([
-      doctorModel.countDocuments(),
-      userModel.countDocuments(),
-      appointmentModel.countDocuments(),
-      appointmentModel.find({}).sort({ createdAt: -1 }).limit(5),
-    ]);
+    const appointments = await appointmentModel.find({}).sort({ createdAt: -1 });
+
+    let earnings = 0;
+    const doctorSet = new Set();
+    const patientSet = new Set();
+
+    appointments.forEach((appointment) => {
+      // ✅ Revenue rule (authoritative)
+      if (appointment.payment === true && appointment.refunded !== true) {
+        earnings += Number(appointment.amount || 0);
+      }
+
+      if (appointment.doctorId) {
+        doctorSet.add(appointment.doctorId.toString());
+      }
+
+      if (appointment.userId) {
+        patientSet.add(appointment.userId.toString());
+      }
+    });
+
+    const dashData = {
+      earnings,                         // ✅ NEW (fixes revenue = 0)
+      doctors: doctorSet.size,
+      patients: patientSet.size,
+      appointments: appointments.length,
+      latestAppointments: appointments.slice(0, 5),
+    };
 
     return res.status(200).json({
       success: true,
-      dashData: {
-        doctors: doctorsCount,
-        appointments: appointmentsCount,
-        patients: usersCount,
-        latestAppointments,
-      },
+      dashData,
     });
   } catch (error) {
     console.error("Admin dashboard error:", error);
@@ -329,6 +340,7 @@ const getAdminDashboardStats = async (req, res) => {
     });
   }
 };
+
 
 export {
   addDoctor,

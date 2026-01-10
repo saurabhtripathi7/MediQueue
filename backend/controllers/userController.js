@@ -49,10 +49,10 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 */
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, dob } = req.body;
 
     /* ---------- Basic input validation ---------- */
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !dob) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -90,6 +90,7 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      dob,
     });
 
     if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
@@ -436,6 +437,7 @@ export const bookAppointment = async (req, res) => {
         email: user.email,
         phone: user.phone,
         image: user.image,
+        dob: user.dob,
       },
       docData: {
         name: doctor.name,

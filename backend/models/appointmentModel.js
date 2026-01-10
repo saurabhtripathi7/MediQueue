@@ -60,10 +60,6 @@ const appointmentSchema = new mongoose.Schema(
       default: false,
     },
 
-    /* ======================================================
-       🔴 PAYMENT GATEWAY FIELDS (CRITICAL)
-       ====================================================== */
-
     // Razorpay order created before checkout
     razorpayOrderId: {
       type: String,

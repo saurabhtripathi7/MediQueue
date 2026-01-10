@@ -153,9 +153,6 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  /* =========================================================
-     CONTEXT EXPORT
-     ========================================================= */
   return (
     <AppContext.Provider
       value={{
@@ -166,7 +163,7 @@ const AppContextProvider = ({ children }) => {
         setUserData,
         loadUserProfileData,
 
-        authReady, // 👈 MUST be used by Navbar / protected UI
+        authReady, // MUST be used by Navbar / protected UI
 
         currencySymbol,
         updateUserProfileData,

@@ -36,7 +36,7 @@ const AppContextProvider = ({ children }) => {
 
   /**
    * Calculates age safely
-   * Returns "—" if DOB is missing (guest users)
+   * Returns "—" if DOB is missing 
    */
   const calculateAge = (dob) => {
     if (!dob) return "—";
