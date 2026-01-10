@@ -34,40 +34,41 @@
 @variant dark (&:where(.dark, .dark *));
 
 /* 2. Body Styles */
+/* Add/Verify these in your index.css */
 body {
-  @apply bg-white text-gray-800 transition-colors duration-300;
+  margin: 0;
+  padding: 0;
+  /* This ensures the background color behind your images is consistent */
+  @apply bg-white dark:bg-slate-950 transition-colors duration-500;
 }
 
-/* DARK MODE: Set entire page background to PURE BLACK */
+/* Optional: Smooth fade for the background image changes */
+.bg-transition {
+  transition: background-image 0.5s ease-in-out, background-color 0.5s ease-in-out;
+}
+
+/* DARK MODE: Set background to deep slate for better stroke contrast */
 .dark body {
-  @apply bg-black text-gray-400;
+  @apply bg-slate-950 text-gray-400;
 }
  
 @layer base {
-  /* 3. GLOBAL DARK MODE TEXT FIX */
-  .dark p, .dark span, .dark li, .dark div {
+  .dark p, .dark span, .dark li {
     @apply text-gray-300; 
   }
 
-  /* Headings */
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
     @apply text-white;
   }
 }
-/* 3. THE SPOTLIGHT (Rich Dark) */
-.dark .bg-white {
-  /* Dark Slate Blue (Rich Black) - easier on eyes than pure black */
-  background-color: #0b0c15 !important;
-  
-  /* Text is very bright for readability */
-  color: #f8fafc;
-  
-  /* Clean, thin border */  
-  border: 1px solid #27272a;
-}
- 
-.dark .bg-white:hover {
-  /* Subtle highlight */
-  border-color: #52525b;
-  background-color: #0f1c71 !important; 
+
+@layer utilities {
+  /* The "Beauty" Indigo Glow Effect */
+  .hover-glow {
+    @apply transition-all duration-500;
+  }
+
+  .dark .hover-glow:hover {
+    @apply border-indigo-500/40 bg-indigo-500/5 shadow-[0_0_30px_rgba(79,70,229,0.15)];
+  }
 }

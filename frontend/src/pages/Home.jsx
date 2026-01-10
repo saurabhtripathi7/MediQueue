@@ -6,26 +6,23 @@ import Banner from "../components/Banner";
 
 const Home = () => {
   return (
-    <div className="min-h-screen">
+    /* Global Page Background: Smooth transition between soft white and professional slate */
+    <div className="min-h-screen bg-[#FDFEFF] dark:bg-slate-950 transition-colors duration-700 ease-in-out overflow-x-hidden">
+      
+      {/* Hero Header Section */}
       <Header />
 
-      {/* Main content wrapper */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-20 space-y-20">
+      {/* Main content wrapper with consistent large width and spacing */}
+      <div className="w-full flex flex-col items-center pb-24 space-y-24 md:space-y-36">
         
         {/* Section 1: Specialities */}
-        <section className="bg-white/90 dark:bg-gray-900 rounded-2xl shadow-sm p-6 sm:p-8">
-          <SpecialityMenu />
-        </section>
+        <SpecialityMenu />
 
         {/* Section 2: Top Doctors */}
-        <section className="bg-white/90 dark:bg-gray-900 rounded-2xl shadow-sm p-6 sm:p-8">
-          <TopDoctors />
-        </section>
+        <TopDoctors />
 
         {/* Section 3: Banner */}
-        <section className="dark:bg-gray-900 rounded-2xl ">
-          <Banner />
-        </section>
+        <Banner />
 
       </div>
     </div>

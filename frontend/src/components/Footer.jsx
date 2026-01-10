@@ -1,124 +1,241 @@
-import React from "react";
+import React, { useState } from "react";
 import { assets } from "../assets/assets";
-import { Link } from "react-router-dom"; 
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import {
+  ArrowRight,
+  Github,
+  Linkedin,
+  Globe,
+  Mail,
+  MapPin,
+  Sparkles,
+  Activity,
+  User,
+} from "lucide-react";
 
 const Footer = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+
+  /* ================= MAGNETIC HORIZON ================= */
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 120, damping: 40 });
+  const springY = useSpring(mouseY, { stiffness: 120, damping: 40 });
+
+  const handleMouseMove = ({ clientX, clientY, currentTarget }) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setEmail("");
+  };
+
+  const socialLinks = [
+    {
+      Icon: Github,
+      link: "https://github.com/saurabhtripathi7",
+      label: "GitHub",
+    },
+    {
+      Icon: Linkedin,
+      link: "https://www.linkedin.com/in/saurabhtripathicr7/",
+      label: "LinkedIn",
+    },
+    {
+      Icon: Globe,
+      link: "https://saurabhtripathi-sde.me",
+      label: "Portfolio",
+    },
+  ];
 
   return (
-    
-    <div className="mt-20 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-16">
-        
-        {/* TOP GRID AREA */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
-          {/* 1. Brand Section */}
-          <div className="lg:col-span-1">
-            <img onClick={() => {
-                navigate("/");
-                window.scrollTo(0, 0);
-              }} className="w-36 mb-6 cursor-pointer" src={assets.main_logo} alt="MediQueue" />
-            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
-              MediQueue simplifies healthcare access. Book appointments, manage health records, and connect with top doctors instantly.
-            </p>
-            <div className="flex gap-3">
-              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-primary hover:bg-primary hover:text-white dark:hover:bg-primary transition-all">
-                  <Icon size={16} />
-                </a>
-              ))}
-            </div>
-          </div>
+    <footer className="w-full mt-12 relative group/footer">
+      <motion.div
+        onMouseMove={handleMouseMove}
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="
+          relative overflow-hidden
+          bg-white/85 border-t border-slate-200
+          dark:bg-slate-950/90 dark:backdrop-blur-3xl dark:border-white/10
+          rounded-t-[3rem] lg:rounded-t-[6rem]
+          px-8 py-12 lg:py-16
+        "
+      >
+        {/* MAGNETIC AURA */}
+        <motion.div
+          className="absolute inset-0 z-0 pointer-events-none opacity-0 dark:group-hover/footer:opacity-100 transition-opacity duration-700"
+          style={{
+            background: useTransform(
+              [springX, springY],
+              ([x, y]) =>
+                `radial-gradient(1000px circle at ${x}px ${y}px, rgba(45,212,191,0.12), transparent 75%)`
+            ),
+          }}
+        />
 
-          {/* 2. Quick Links */}
-          <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Quick Links</h3>
-            <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
-              {[
-                { label: 'Home', path: '/' },
-                { label: 'All Doctors', path: '/doctors' },
-                { label: 'About Us', path: '/about' },
-                { label: 'Contact', path: '/contact' },
-                { label: 'My Profile', path: '/my-profile' }, 
-              ].map((link) => (
-                <li key={link.path}>
-                  <Link 
-                    to={link.path} 
-                    onClick={() => window.scrollTo(0, 0)} // Added Scroll To Top Here
-                    className="hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-1 group"
-                  >
-                    <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300">→</span>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 3. Contact Info */}
-          <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Contact Us</h3>
-            <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary shrink-0" />
-                <span>KIET Group of Institutions,<br />Delhi NCR, India</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary shrink-0" />
-                <span>+91 9569932897</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-primary shrink-0" />
-                <span>saurabh7sde@gmail.com</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* 4. Newsletter */}
-          <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-6">Stay Updated</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-              Subscribe to get the latest health tips and updates.
-            </p>
-            <div className="flex">
-              <input 
-                type="email" 
-                placeholder="Enter email" 
-                className="w-full px-3 py-2.5 rounded-l-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-primary text-sm"
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* ================= MAIN GRID ================= */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+            {/* BRAND */}
+            <div className="space-y-6">
+              <img
+                onClick={() => { navigate("/"); window.scrollTo(0, 0); }}
+                className="w-32 cursor-pointer hover:scale-105 transition"
+                src={assets.main_logo}
+                alt="MediQueue"
               />
-              <button className="bg-primary text-white px-3 rounded-r-lg hover:bg-secondary transition-colors">
-                <ArrowRight size={18} />
+
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed max-w-xs">
+                Empowering patients with smart queue management and instant specialist access.
+              </p>
+
+              <div className="flex gap-3">
+                {socialLinks.map(({ Icon, link, label }) => (
+                  <motion.a
+                    key={label}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    whileHover={{ y: -3, scale: 1.1 }}
+                    className="
+                      w-10 h-10 flex items-center justify-center rounded-xl
+                      bg-slate-100 dark:bg-white/5
+                      border border-slate-200 dark:border-white/10
+                      text-slate-600 dark:text-slate-400
+                      hover:text-primary dark:hover:text-teal-400 transition
+                    "
+                  >
+                    <Icon size={18} />
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* MY PROFILE BUTTON */}
+              <button
+                onClick={() => { navigate("/my-profile"); window.scrollTo(0, 0); }}
+                className="
+                  mt-2 inline-flex items-center gap-3 px-5 py-2.5
+                  rounded-full bg-primary/10 dark:bg-teal-500/10
+                  text-primary dark:text-teal-400
+                  text-sm font-semibold
+                  hover:bg-primary hover:text-white
+                  dark:hover:bg-teal-500 dark:hover:text-white
+                  transition
+                "
+              >
+                <User size={16} />
+                My Profile
               </button>
             </div>
+
+            {/* PLATFORM */}
+            <div>
+              <h3 className="text-slate-900 dark:text-white font-black text-xs uppercase tracking-[0.25em] mb-6 border-l-2 border-primary pl-3">
+                Platform
+              </h3>
+              <ul className="space-y-4">
+                {["Home", "All Doctors", "About Us", "Contact"].map(item => (
+                  <li key={item}>
+                    <Link
+                      to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                      onClick={() => window.scrollTo(0, 0)}
+                      className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-teal-400 transition flex items-center gap-3"
+                    >
+                      <span className="h-px w-4 bg-slate-300 dark:bg-white/20" />
+                      {item}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* SUPPORT */}
+            <div>
+              <h3 className="text-slate-900 dark:text-white font-black text-xs uppercase tracking-[0.25em] mb-6 border-l-2 border-primary pl-3">
+                Reach Us
+              </h3>
+              <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                <li className="flex items-center gap-3">
+                  <MapPin size={18} className="text-primary dark:text-teal-400" />
+                  Lucknow, India
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail size={18} className="text-primary dark:text-teal-400" />
+                  saurabh7sde@gmail.com
+                </li>
+              </ul>
+            </div>
+
+            {/* NEWSLETTER */}
+            <div className="space-y-6">
+              <h3 className="text-slate-900 dark:text-white font-black text-xs uppercase tracking-[0.25em] border-l-2 border-primary pl-3">
+                Newsletter
+              </h3>
+
+              <form
+                onSubmit={handleNewsletterSubmit}
+                className="
+                  flex p-1.5 rounded-2xl bg-slate-100 dark:bg-white/5
+                  border border-slate-200 dark:border-white/10
+                "
+              >
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-2 bg-transparent outline-none text-sm dark:text-white"
+                />
+                <button
+                  type="submit"
+                  disabled={!email}
+                  className="
+                    bg-primary dark:bg-teal-500 text-white
+                    px-4 rounded-xl
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    hover:scale-105 active:scale-95 transition
+                  "
+                >
+                  <ArrowRight size={18} />
+                </button>
+              </form>
+
+              <div className="flex items-center gap-2 text-primary dark:text-teal-400 text-xs font-bold uppercase tracking-widest">
+                <Activity size={14} className="animate-pulse" />
+                Live Service
+              </div>
+            </div>
+          </div>
+
+          {/* ================= SIGNATURE ================= */}
+          <div className="pt-8 border-t border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">
+              © 2026 MediQueue • Built by Saurabh Tripathi
+            </p>
+
+            <div className="flex gap-10">
+              {["Privacy", "Terms", "Sitemap"].map(text => (
+                <span
+                  key={text}
+                  className="text-xs font-bold text-slate-500 hover:text-primary dark:hover:text-teal-400 transition cursor-pointer uppercase tracking-widest"
+                >
+                  {text}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* BOTTOM COPYRIGHT */}
-        <div className="pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
-            © 2025 MediQueue. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-sm text-gray-500">
-            <span 
-              onClick={() => window.scrollTo(0, 0)} // Added Scroll Here
-              className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              Privacy Policy
-            </span>
-            <span 
-              onClick={() => window.scrollTo(0, 0)} // Added Scroll Here
-              className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              Terms of Service
-            </span>
-          </div>
-        </div>
-
-      </div>
-    </div>
+      </motion.div>
+    </footer>
   );
 };
 

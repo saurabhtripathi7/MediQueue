@@ -1,97 +1,108 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, Loader2, X } from "lucide-react";
 
 /**
- * ConfirmModal (Enhanced)
+ * IMPROVISED ConfirmModal
  * ============================================================
- * UPDATES:
- * - Added Dark Mode support (dark: classes)
- * - Added "Click Outside" to dismiss
- * - Styled Cancel button to turn red on hover (as requested)
- * - Improved accessibility (ARIA roles)
+ * FEATURE UPDATES:
+ * - Spring-based entrance animation (Framer Motion)
+ * - Semantic Warning Icon for instant recognition
+ * - High-contrast typography (Slate-900 / Slate-500)
+ * - Glassmorphism Backdrop
  */
 const ConfirmModal = ({
   isOpen,
-  title = "Are you sure?",
-  message = "This action cannot be undone.",
+  title = "Confirm Action",
+  message = "Are you sure you want to proceed? This cannot be undone.",
   confirmText = "Confirm",
-  cancelText = "Cancel",
+  cancelText = "Back",
   onConfirm,
   onCancel,
   isLoading = false,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    // OVERLAY: Added onClick={onCancel} so clicking the black background closes modal
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-    >
-      {/* MODAL CONTENT: 
-         - Added e.stopPropagation() so clicking inside the box doesn't close it 
-         - Added dark mode colors 
-      */}
-      <div 
-        className="relative bg-white dark:bg-gray-800 rounded-xl p-6 w-[90%] max-w-sm shadow-xl border border-gray-100 dark:border-gray-700 transform transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* TITLE */}
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-          {title}
-        </h3>
-
-        {/* MESSAGE */}
-        <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-          {message}
-        </div>
-
-        {/* ACTIONS */}
-        <div className="flex justify-end gap-3 mt-6">
-          {/* CANCEL BUTTON 
-             - Default: Neutral Gray
-             - Hover: Red Text + Red Background Tint (Your Request)
-             - Dark Mode: Adjusts to look good on dark background
-          */}
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+          
+          {/* 1. BACKDROP: Glassmorphism effect */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onCancel}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 
-                       hover:bg-red-50 hover:text-red-600 hover:border-red-200 
-                       dark:border-gray-600 dark:text-gray-300 
-                       dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800
-                       disabled:opacity-50 transition-colors duration-200"
-          >
-            {cancelText}
-          </button>
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+          />
 
-          {/* CONFIRM BUTTON 
-             - Solid Red (Destructive)
-          */}
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg 
-                       hover:bg-red-700 focus:ring-4 focus:ring-red-500/30
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          {/* 2. MODAL CONTAINER */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                {/* Simple SVG Spinner */}
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              confirmText
+            {/* Close Button (Upper Right) */}
+            <button 
+                onClick={onCancel}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            >
+                <X size={20} />
+            </button>
+
+            <div className="p-8 pt-10">
+              {/* ICON HEADER: Instant visual "Caution" signal */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mb-6">
+                  <AlertCircle className="text-rose-600 dark:text-rose-500" size={32} />
+                </div>
+
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {title}
+                </h3>
+
+                <p className="text-slate-500 dark:text-slate-400 mt-3 text-sm font-medium leading-relaxed">
+                  {message}
+                </p>
+              </div>
+
+              {/* ACTION BUTTONS: Clear hierarchy */}
+              <div className="flex flex-col gap-3 mt-10">
+                <button
+                  onClick={onConfirm}
+                  disabled={isLoading}
+                  className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-rose-600/30 hover:bg-rose-700 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    confirmText
+                  )}
+                </button>
+
+                <button
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="w-full py-4 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-100 dark:border-slate-800"
+                >
+                  {cancelText}
+                </button>
+              </div>
+            </div>
+
+            {/* Subtle Progress Bar (Visual Polish) */}
+            {isLoading && (
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    className="h-1.5 bg-rose-600 absolute bottom-0 left-0"
+                />
             )}
-          </button>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 
