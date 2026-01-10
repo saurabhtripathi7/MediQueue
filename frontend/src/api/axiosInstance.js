@@ -28,7 +28,7 @@ import axios from "axios";
    - withCredentials allows cookies (if used)
 */
 const api = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api`,
   withCredentials: true,
 });
 
