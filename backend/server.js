@@ -5,55 +5,63 @@ import multer from "multer";
 
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
+
 import adminRouter from "./routes/adminRoute.js";
 import doctorRouter from "./routes/doctorRoute.js";
 import userRouter from "./routes/userRoute.js";
 
-// ================= APP CONFIG =================
+/* ================= APP CONFIG ================= */
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ================= DB & CLOUDINARY =================
+/* ================= DB & CLOUDINARY ================= */
 connectDB();
 connectCloudinary();
 
-// ================= MIDDLEWARES =================
+/* ================= MIDDLEWARES ================= */
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // parse form-data text fields
+app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = [
-  "http://localhost:5173", //frontend
-  "http://localhost:5174", //admin panel
-];
+/*
+  ALLOWED_ORIGINS should be set in Render ENV like:
+  https://mediqueue.vercel.app,https://mediqueue-admin.vercel.app
+*/
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [
+      "http://localhost:5173", // local frontend
+      "http://localhost:5174", // local admin
+    ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow server-to-server & Postman
+    origin: (origin, callback) => {
+      // allow Postman, server-to-server, cron jobs
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
-// ================= ROUTES =================
+
+/* ================= ROUTES ================= */
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/user", userRouter);
 
-// ================= TEST ROUTE =================
+/* ================= HEALTH CHECK ================= */
 app.get("/", (req, res) => {
-  res.send("API is working !!!");
+  res.status(200).send("MediQueue API is running 🚀");
 });
 
-// ================= GLOBAL ERROR HANDLER =================
+/* ================= GLOBAL ERROR HANDLER ================= */
 app.use((err, req, res, next) => {
-  // Multer-specific errors
+  // Multer errors
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
@@ -65,19 +73,19 @@ app.use((err, req, res, next) => {
     if (err.code === "LIMIT_UNEXPECTED_FILE") {
       return res.status(400).json({
         success: false,
-        message: err.message || "Invalid image type",
+        message: err.message || "Invalid file upload",
       });
     }
   }
 
-  // Generic error fallback
+  // Default error
   return res.status(500).json({
     success: false,
-    message: err.message || "Something went wrong",
+    message: err.message || "Internal Server Error",
   });
 });
 
-// ================= START SERVER =================
+/* ================= START SERVER ================= */
 app.listen(PORT, () => {
-  console.log(`Server is running at ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
