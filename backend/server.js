@@ -18,36 +18,41 @@ const PORT = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
-/* ================= MIDDLEWARES ================= */
+/* ================= BODY PARSERS ================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+/* ================= CORS ================= */
 /*
-  ALLOWED_ORIGINS should be set in Render ENV like:
-  https://mediqueue.vercel.app,https://mediqueue-admin.vercel.app
+ Render ENV (NO SPACES):
+ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,https://medi-queue-saurabh.vercel.app,https://medi-queue-admin-saurabh.vercel.app
 */
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : [
-      "http://localhost:5173", // local frontend
-      "http://localhost:5174", // local admin
-    ];
+  : [];
 
+// CORS middleware — DO NOT THROW ERRORS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow Postman, server-to-server, cron jobs
+      // Allow Postman, mobile apps, server-to-server
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      // ❗ IMPORTANT: return false, NOT error
+      return callback(null, false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// 🔥 REQUIRED FOR BROWSER PREFLIGHT REQUESTS
+app.options("*", cors());
 
 /* ================= ROUTES ================= */
 app.use("/api/admin", adminRouter);
@@ -78,7 +83,6 @@ app.use((err, req, res, next) => {
     }
   }
 
-  // Default error
   return res.status(500).json({
     success: false,
     message: err.message || "Internal Server Error",

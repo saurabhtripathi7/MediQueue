@@ -3,29 +3,45 @@
  * AXIOS INSTANCE (api)
  * ======================================================
  *
- * PURPOSE
- * ------------------------------------------------------
- * This file centralizes ALL HTTP communication
- * between frontend and backend.
+ * PURPOSE:
+ * --------
+ * Centralized HTTP client for the frontend.
  *
- * It provides:
- * 1. Automatic attachment of access tokens
- * 2. Automatic refresh of expired access tokens
- * 3. Seamless retry of failed requests
+ * This file is responsible for:
+ * - Setting the backend base URL (via environment variables)
+ * - Automatically attaching JWT access tokens to requests
+ * - Handling token expiration using refresh tokens
+ * - Retrying failed requests after token refresh
+ * - Logging the user out safely when authentication fails
  *
- * Result:
- * - Components never deal with tokens directly
- * - Auth logic lives in ONE place
- * - Cleaner, safer frontend code
+ * DESIGN GOALS:
+ * -------------
+ * ✔ No hardcoded URLs
+ * ✔ No infinite refresh loops
+ * ✔ Does NOT touch theme / UI state
+ * ✔ Only auth-related localStorage keys are managed here
+ * ✔ Works transparently for all API calls
  */
 
 import axios from "axios";
 
 /* ======================================================
+   AUTH STORAGE KEYS (Single Source of Truth)
+   ======================================================
+   Keeping key names in one place avoids typos and
+   makes refactoring safer.
+*/
+const AUTH_KEYS = {
+  ACCESS: "accessToken",
+  REFRESH: "refreshToken",
+};
+
+/* ======================================================
    AXIOS INSTANCE CONFIGURATION
    ======================================================
-   - baseURL is prepended to all requests
-   - withCredentials allows cookies (if used)
+   - baseURL comes from Vite environment variables
+   - `/api` prefix keeps routes consistent
+   - withCredentials allows cookies if backend uses them
 */
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_BACKEND_URL}/api`,
@@ -33,144 +49,126 @@ const api = axios.create({
 });
 
 /* ======================================================
+   AUTH CLEANUP HELPER
+   ======================================================
+   Used when:
+   - Refresh token is missing
+   - Refresh token is invalid/expired
+   - Backend explicitly rejects authentication
+*/
+const clearAuthStorage = () => {
+  localStorage.removeItem(AUTH_KEYS.ACCESS);
+  localStorage.removeItem(AUTH_KEYS.REFRESH);
+};
+
+/* ======================================================
    REQUEST INTERCEPTOR
    ======================================================
-   Runs BEFORE every request leaves the browser.
-
-   Responsibility:
-   - Read accessToken from storage
-   - Attach it to Authorization header
-   - Make all API calls auth-aware automatically
-
-   This eliminates the need to do this manually:
-   api.get("/doctors", {
-     headers: { Authorization: "Bearer ..." } ❌
-   });
+   Runs BEFORE every outgoing request.
+   Automatically attaches the access token (if present).
 */
-api.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem("accessToken");
+api.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem(AUTH_KEYS.ACCESS);
 
-  // Attach token ONLY if it exists
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
+    // Attach Authorization header only if token exists
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
 
-  return config; // request continues
-});
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /* ======================================================
    RESPONSE INTERCEPTOR
    ======================================================
-   Runs AFTER a response is received.
-
-   Handles ONE special case:
-   - Access token has expired (HTTP 401)
-
-   Strategy:
-   - Try to refresh access token using refresh token
-   - Retry the original request transparently
-   - Logout user if refresh fails
+   Handles:
+   - Expired access tokens
+   - Token refresh & request retry
+   - Safe logout on auth failure
 */
 api.interceptors.response.use(
-  /* ==================================================
-     1️⃣ SUCCESS PATH
-     ==================================================
-     If response is successful (2xx),
-     just return it as-is.
-  */
+  /* ================= SUCCESS ================= */
+  // If the response is successful, simply return it
   (response) => response,
 
-  /* ==================================================
-     2️⃣ ERROR PATH
-     ==================================================
-     This function runs when a response error occurs
-  */
+  /* ================= ERROR ================= */
   async (error) => {
-    /*
-      error.config contains the ORIGINAL request config:
-      - URL
-      - method
-      - headers
-      - body
-      - baseURL
-    */
     const originalRequest = error.config;
 
+    /* ------------------------------------------
+       NETWORK / SERVER DOWN / CORS ERRORS
+       ------------------------------------------
+       If there is no response object, the request
+       never reached the backend.
+    */
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
     /* ==================================================
-       3️⃣ CHECK: ACCESS TOKEN EXPIRED?
+       ACCESS TOKEN EXPIRED (401 UNAUTHORIZED)
        ==================================================
        Conditions:
-       - HTTP status is 401 (Unauthorized)
-       - Request has NOT been retried yet
-
-       `_retry` flag prevents infinite refresh loops
+       - Status is 401
+       - Request has not already been retried
     */
     if (
-      error.response?.status === 401 &&
+      error.response.status === 401 &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
 
+      const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH);
+
+      /* ------------------------------------------
+         NO REFRESH TOKEN → FORCE LOGOUT
+         ------------------------------------------ */
+      if (!refreshToken) {
+        clearAuthStorage();
+        window.location.replace("/login");
+        return Promise.reject(error);
+      }
+
       try {
-        /* ==============================================
-           4️⃣ ATTEMPT TOKEN REFRESH
-           ==============================================
-           - Refresh token is long-lived
-           - Stored securely (here: localStorage)
-        */
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        if (!refreshToken) {
-          // No refresh token → force logout
-          localStorage.clear();
-          window.location.href = "/login";
-          return Promise.reject(error);
-        }
-
-        /* ==============================================
-           5️⃣ CALL REFRESH TOKEN ENDPOINT
-           ============================================== */
+        /* ==========================================
+           REQUEST NEW ACCESS TOKEN
+           ========================================== */
         const res = await api.post("/user/refresh", {
           refreshToken,
         });
 
-        /*
-          Backend returns:
-          {
-            accessToken: "<new_access_token>"
-          }
-        */
+        const newAccessToken = res.data?.accessToken;
 
-        /* ==============================================
-           6️⃣ STORE NEW ACCESS TOKEN
-           ============================================== */
-        localStorage.setItem("accessToken", res.data.accessToken);
+        if (!newAccessToken) {
+          throw new Error("No access token returned");
+        }
 
-        /* ==============================================
-           7️⃣ RETRY ORIGINAL REQUEST
-           ==============================================
-           - Update Authorization header
-           - Replay original API call
-        */
+        /* ==========================================
+           STORE TOKEN & RETRY ORIGINAL REQUEST
+           ========================================== */
+        localStorage.setItem(AUTH_KEYS.ACCESS, newAccessToken);
+
         originalRequest.headers.Authorization =
-          `Bearer ${res.data.accessToken}`;
+          `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
       } catch (refreshError) {
-        /* ==============================================
-           8️⃣ REFRESH FAILED → FORCE LOGOUT
-           ============================================== */
-        localStorage.clear();
-        window.location.href = "/login";
+        /* ==========================================
+           REFRESH FAILED → LOGOUT
+           ========================================== */
+        clearAuthStorage();
+        window.location.replace("/login");
         return Promise.reject(refreshError);
       }
     }
 
     /* ==================================================
-       9️⃣ NON-AUTH ERRORS
+       ALL OTHER ERRORS
        ==================================================
-       Any other error (400, 403, 500, etc.)
-       is passed back to the caller.
+       Let calling code handle them (UI messages, etc.)
     */
     return Promise.reject(error);
   }
