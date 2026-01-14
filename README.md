@@ -93,22 +93,32 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 ## 📂 Project Structure
 
 ```
-MediQueue/
-├── frontend/
-│   └── src/
-│       ├── components/    # Reusable UI components
-│       ├── pages/         # Application routes/views
-│       ├── context/       # Global state (Auth, Theme)
-│       ├── services/      # API interaction logic
-│       └── utils/         # Helper functions
-│
-├── backend/
-│   ├── controllers/       # Business logic & request handling
-│   ├── models/            # Mongoose database schemas
-│   ├── routes/            # API endpoints
-│   ├── middleware/        # Auth checks & error handling
-│   ├── config/            # DB connection setup
-│   └── server.js          # Entry point
+- MEDIQUEUE/
+- ├── admin/
+- │   ├── src/
+- │   │   ├── components/
+- │   │   ├── context/
+- │   │   ├── pages/
+- │   │   │   ├── Admin/
+- │   │   │   ├── Doctor/
+- │   │   │   └── Login.jsx
+- │   │   ├── App.jsx
+- │   │   └── main.jsx
+- │   ├── package.json
+- │   └── vite.config.js
+- ├── backend/
+- │   ├── controllers/
+- │   ├── models/
+- │   ├── routes/
+- │   ├── server.js
+- │   └── .env
+- └── frontend/
+-     ├── src/
+-     │   ├── components/
+-     │   ├── pages/
+-     │   └── App.jsx
+-     ├── package.json
+-     └── tailwind.config.js
 ```
 
 
