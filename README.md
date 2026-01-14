@@ -32,13 +32,13 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 ## 📸 Screenshots
 
-| Home Page | Appointment Booking |
+| Home Page | All Doctors |
 |:---:|:---:|
-| ![Home](./screenshots/home.png) | ![Booking](./screenshots/booking.png) |
+| ![Home]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/HomePage.png)) | ![All Doctors]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/AllDoctors.png)) |
 
-| Dashboard | Queue Status |
+| My Appointments | Doctor's Page |
 |:---:|:---:|
-| ![Dashboard](./screenshots/dashboard.png) | ![Queue](./screenshots/queue.png) |
+| ![Dashboard]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/MyAppointments_light.png)) | ![Doctor's Page](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/DoctorPage.png) |
 
 ---
 
