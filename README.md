@@ -14,14 +14,9 @@
 
 ## 🔗 Live Demo
 
-- 🚀 **Live Application:** https://medi-queue.vercel.app
-- 📄 **Backend API:** https://medi-queue-api.onrender.com
+- 🚀 **Live Application:** https://medi-queue-saurabh.vercel.app/
+- 📄 **Backend API:** https://mediqueue-agwp.onrender.com
 
-**Test Credentials:**
-Email:    demo@mediqueue.com
-Password: demo123
-
----
 
 ## 🎯 Problem Statement
 
