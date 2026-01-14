@@ -92,6 +92,7 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 ## 📂 Project Structure
 
+```
 - MEDIQUEUE/
 - ├── admin/
 - │   ├── src/
@@ -103,21 +104,20 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 - │   │   │   └── Login.jsx
 - │   │   ├── App.jsx
 - │   │   └── main.jsx
-- │   ├── package.json
 - │   └── vite.config.js
 - ├── backend/
 - │   ├── controllers/
 - │   ├── models/
 - │   ├── routes/
 - │   ├── server.js
-- │   └── .env
 - └── frontend/
 -     ├── src/
 -     │   ├── components/
 -     │   ├── pages/
 -     │   └── App.jsx
--     ├── package.json
 -     └── tailwind.config.js
+
+```
 
 
 ## ⚡ Getting Started
