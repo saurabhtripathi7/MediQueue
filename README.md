@@ -34,11 +34,11 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 | Home Page | All Doctors |
 |:---:|:---:|
-| ![Home]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/HomePage.png)) | ![All Doctors]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/AllDoctors.png)) |
+| ![Home](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/HomePage.png) | ![All Doctors](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/AllDoctors.png) |
 
 | My Appointments | Doctor's Page |
 |:---:|:---:|
-| ![Dashboard]((https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/MyAppointments_light.png)) | ![Doctor's Page](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/DoctorPage.png) |
+| ![Dashboard](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/MyAppointments_light.png) | ![Doctor's Page](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/DoctorPage.png) |
 
 ---
 
