@@ -103,6 +103,7 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 - │   │   │   └── Login.jsx
 - │   │   ├── App.jsx
 - │   │   └── main.jsx
+- │   ├── package.json
 - │   └── vite.config.js
 - ├── backend/
 - │   ├── controllers/
@@ -115,8 +116,8 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 -     │   ├── components/
 -     │   ├── pages/
 -     │   └── App.jsx
+-     ├── package.json
 -     └── tailwind.config.js
-
 
 
 ## ⚡ Getting Started
