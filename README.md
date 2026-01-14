@@ -92,24 +92,25 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 ## 📂 Project Structure
 
+```
 MediQueue/
 ├── frontend/
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Application routes/views
-│   │   ├── context/       # Global state (Auth, Theme)
-│   │   ├── services/      # API interaction logic
-│   │   └── utils/         # Helper functions
+│   └── src/
+│       ├── components/    # Reusable UI components
+│       ├── pages/         # Application routes/views
+│       ├── context/       # Global state (Auth, Theme)
+│       ├── services/      # API interaction logic
+│       └── utils/         # Helper functions
 │
 ├── backend/
-│   ├── controllers/       # Business logic & Request handling
-│   ├── models/            # Mongoose Database schemas
+│   ├── controllers/       # Business logic & request handling
+│   ├── models/            # Mongoose database schemas
 │   ├── routes/            # API endpoints
 │   ├── middleware/        # Auth checks & error handling
 │   ├── config/            # DB connection setup
 │   └── server.js          # Entry point
+```
 
----
 
 ## ⚡ Getting Started
 
