@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 /* ================= CORS ================= */
 /*
  Render ENV (NO SPACES):
- ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,https://medi-queue-saurabh.vercel.app,https://medi-queue-admin-saurabh.vercel.app
+ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,https://medi-queue-saurabh.vercel.app,https://medi-queue-admin-gold.vercel.app
 */
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
@@ -42,7 +42,7 @@ app.use(
         return callback(null, true);
       }
 
-      // ❗ IMPORTANT: return false, NOT error
+      // return false, NOT error
       return callback(null, false);
     },
     credentials: true,
@@ -51,8 +51,6 @@ app.use(
   })
 );
 
-// REQUIRED FOR BROWSER PREFLIGHT REQUESTS
-app.options("/*", cors());
 
 /* ================= ROUTES ================= */
 app.use("/api/admin", adminRouter);
