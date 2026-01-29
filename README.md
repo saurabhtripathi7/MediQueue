@@ -32,13 +32,13 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 ## 📸 Screenshots
 
-| Home Page | Appointment Booking |
+| Home Page | All Doctors |
 |:---:|:---:|
-| ![Home](./screenshots/home.png) | ![Booking](./screenshots/booking.png) |
+| ![Home](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/HomePage.png) | ![All Doctors](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/AllDoctors.png) |
 
-| Dashboard | Queue Status |
+| My Appointments | Doctor's Page |
 |:---:|:---:|
-| ![Dashboard](./screenshots/dashboard.png) | ![Queue](./screenshots/queue.png) |
+| ![Dashboard](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/MyAppointments_light.png) | ![Doctor's Page](https://github.com/saurabhtripathi7/MediQueue/blob/main/Screenshots/DoctorPage.png) |
 
 ---
 
@@ -92,24 +92,33 @@ Small and mid-scale clinics often rely on manual queues or phone-based appointme
 
 ## 📂 Project Structure
 
-MediQueue/
-├── frontend/
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Application routes/views
-│   │   ├── context/       # Global state (Auth, Theme)
-│   │   ├── services/      # API interaction logic
-│   │   └── utils/         # Helper functions
-│
-├── backend/
-│   ├── controllers/       # Business logic & Request handling
-│   ├── models/            # Mongoose Database schemas
-│   ├── routes/            # API endpoints
-│   ├── middleware/        # Auth checks & error handling
-│   ├── config/            # DB connection setup
-│   └── server.js          # Entry point
+```
+- MEDIQUEUE/
+- ├── admin/
+- │   ├── src/
+- │   │   ├── components/
+- │   │   ├── context/
+- │   │   ├── pages/
+- │   │   │   ├── Admin/
+- │   │   │   ├── Doctor/
+- │   │   │   └── Login.jsx
+- │   │   ├── App.jsx
+- │   │   └── main.jsx
+- │   └── vite.config.js
+- ├── backend/
+- │   ├── controllers/
+- │   ├── models/
+- │   ├── routes/
+- │   ├── server.js
+- └── frontend/
+-     ├── src/
+-     │   ├── components/
+-     │   ├── pages/
+-     │   └── App.jsx
+-     └── tailwind.config.js
 
----
+```
+
 
 ## ⚡ Getting Started
 
