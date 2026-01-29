@@ -51,8 +51,8 @@ app.use(
   })
 );
 
-// 🔥 REQUIRED FOR BROWSER PREFLIGHT REQUESTS
-app.options("*", cors());
+// REQUIRED FOR BROWSER PREFLIGHT REQUESTS
+app.options("/*", cors());
 
 /* ================= ROUTES ================= */
 app.use("/api/admin", adminRouter);
